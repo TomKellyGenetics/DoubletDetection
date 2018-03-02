@@ -23,7 +23,7 @@ class BoostClassifier(object):
             use; other genes discarded. Will use all genes when non-positive.
         new_lib_as: (str, optional): Method to use in choosing new library size
             for synthetic creation. Defaults to "mean". Other valid options are
-            "max", "mean_from_clusters".
+            "max", "mean_from_clusters", "mean_from_dists".
             NOTE: Support for functions of the form ([int, int]) -> number is
             currently maintained, but is deprecated and may be removed in a
             future release.
@@ -266,6 +266,20 @@ class BoostClassifier(object):
                 cluster2 = np.where(self._lib_communities == self._lib_communities[row2])[0]
                 lib1 = np.sum(self._raw_counts[np.random.choice(cluster1)])
                 lib2 = np.sum(self._raw_counts[np.random.choice(cluster2)])
+                new_lib_size = int(np.mean([lib1, lib2]))
+            elif self.new_lib_as == "mean_from_dists":
+                try:
+                    cluster1 = np.where(self._lib_communities == self._lib_communities[row1])[0]
+                except AttributeError:
+                    logging.debug("Calculating _lib_communities")
+                    norm_counts = normalize_counts(self._raw_counts)
+                    self._lib_communities = self._cluster(norm_counts, verbose=False)
+                    cluster1 = np.where(self._lib_communities == self._lib_communities[row1])[0]
+                cluster2 = np.where(self._lib_communities == self._lib_communities[row2])[0]
+                std1 = np.std(np.sum(cluster1, axis=1))
+                lib1 = np.random.normal(lib1, std1)
+                std2 = np.std(np.sum(cluster2, axis=1))
+                lib2 = np.random.normal(lib2, std2)
                 new_lib_size = int(np.mean([lib1, lib2]))
 
         return new_lib_size
