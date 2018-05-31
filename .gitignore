@@ -1,3 +1,6 @@
 *.pyc
 
 .ipynb_checkpoints/
+.Rproj.user
+*.Rproj
+.Rbuildignore
