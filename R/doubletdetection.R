@@ -1,26 +1,38 @@
-# Hello, world!
-#
-# This is an example function named 'hello' 
-# which prints 'Hello, world!'.
-#
-# You can learn more about package authoring with RStudio at:
-#
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Cmd + Shift + B'
-#   Check Package:             'Cmd + Shift + E'
-#   Test Package:              'Cmd + Shift + T'
-
-hello <- function() {
-  print("Hello, world!")
+##' @name doublet_detection
+##' @rdname doublet_detection
+##'
+##' @title Doublet detection in single-cell RNA-seq data
+##' 
+##' @description Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
+##' 
+##' @param raw_counts a matrix or data.frame containing raw UMI counts such as a gene-barcode matrix  (genes or transcripts by cell barcode).
+##' @param pseudocount a float to add prior to log-transform (to avoid non-zero values).
+##' 
+##' @keywords scRNA quality filter matrix normalise doublets single-cell
+##' @export
+normalize_counts <- function(raw_counts, pseudocount=0.1){
+  # Normalize count array.
+  # 
+  # Args:
+  # raw_counts (ndarray): count data
+  # pseudocount (float, optional): Count to add prior to log transform.
+  # 
+  # Returns:
+  # ndarray: Normalized data.
+  # Sum across cells
+  cell_sums <- apply(raw_counts, 2, sum)
+  
+  # Mutiply by median and divide each cell by cell sum
+  median <- median(cell_sums)
+  normed <- apply(raw_counts, 2, function(x) x*median/sum(x))
+  
+  #log-transform
+  normed <- log(normed + pseudocount)
+  
+  return(normed)
 }
 
-# 
-# 
-# """Doublet detection in single-cell RNA-seq data."""
-# 
+
 # import collections
 # import warnings
 # 
@@ -34,26 +46,7 @@ hello <- function() {
 # import tables
 # 
 # 
-# def normalize_counts(raw_counts, pseudocount=0.1):
-#   """Normalize count array.
-# 
-# Args:
-# raw_counts (ndarray): count data
-# pseudocount (float, optional): Count to add prior to log transform.
-# 
-# Returns:
-# ndarray: Normalized data.
-#     """
-#     # Sum across cells
-#     cell_sums = np.sum(raw_counts, axis=1)
-# 
-#     # Mutiply by median and divide each cell by cell sum
-#     median = np.median(cell_sums)
-#     normed = raw_counts * median / cell_sums[:, np.newaxis]
-# 
-#     normed = np.log(normed + pseudocount)
-# 
-#     return normed
+
 # 
 # 
 # def load_10x_h5(file, genome):
@@ -74,19 +67,19 @@ hello <- function() {
 # 
 #     with tables.open_file(file, 'r') as f:
 #         try:
-#             group = f.get_node(f.root, genome)
+#             group <- f.get_node(f.root, genome)
 #         except tables.NoSuchNodeError:
 #             print("That genome does not exist in this file.")
 #             return None
-#     # gene_ids = getattr(group, 'genes').read()
-#     gene_names = getattr(group, 'gene_names').read()
-#     barcodes = getattr(group, 'barcodes').read()
-#     data = getattr(group, 'data').read()
-#     indices = getattr(group, 'indices').read()
-#     indptr = getattr(group, 'indptr').read()
-#     shape = getattr(group, 'shape').read()
-#     matrix = sp_sparse.csc_matrix((data, indices, indptr), shape=shape)
-#     dense_matrix = matrix.toarray()
+#     # gene_ids <- getattr(group, 'genes').read()
+#     gene_names <- getattr(group, 'gene_names').read()
+#     barcodes <- getattr(group, 'barcodes').read()
+#     data <- getattr(group, 'data').read()
+#     indices <- getattr(group, 'indices').read()
+#     indptr <- getattr(group, 'indptr').read()
+#     shape <- getattr(group, 'shape').read()
+#     matrix <- sp_sparse.csc_matrix((data, indices, indptr), shape=shape)
+#     dense_matrix <- matrix.toarray()
 # 
 #     return dense_matrix, barcodes, gene_names
 # 
@@ -100,7 +93,7 @@ hello <- function() {
 #     Returns:
 #         ndarray: Raw count matrix.
 #     """
-#     raw_counts = np.transpose(mmread(file).toarray())
+#     raw_counts <- np.transpose(mmread(file).toarray())
 # 
 #     return raw_counts
 # 
@@ -157,33 +150,33 @@ hello <- function() {
 #     def __init__(self, boost_rate=0.25, n_components=30, n_top_var_genes=10000, new_lib_as=None,
 #                  replace=False, phenograph_parameters={'prune': True}, n_iters=25,
 #                  normalizer=normalize_counts):
-#         self.boost_rate = boost_rate
-#         self.new_lib_as = new_lib_as
-#         self.replace = replace
-#         self.n_iters = n_iters
-#         self.normalizer = normalizer
+#         self.boost_rate <- boost_rate
+#         self.new_lib_as <- new_lib_as
+#         self.replace <- replace
+#         self.n_iters <- n_iters
+#         self.normalizer <- normalizer
 # 
 #         if n_components == 30 and n_top_var_genes > 0:
 #             # If user did not change n_components, silently cap it by n_top_var_genes if needed
-#             self.n_components = min(n_components, n_top_var_genes)
+#             self.n_components <- min(n_components, n_top_var_genes)
 #         else:
-#             self.n_components = n_components
+#             self.n_components <- n_components
 #         # Floor negative n_top_var_genes by 0
-#         self.n_top_var_genes = max(0, n_top_var_genes)
+#         self.n_top_var_genes <- max(0, n_top_var_genes)
 # 
 #         if 'prune' not in phenograph_parameters:
-#             phenograph_parameters['prune'] = True
-#         self.phenograph_parameters = phenograph_parameters
+#             phenograph_parameters['prune'] <- True
+#         self.phenograph_parameters <- phenograph_parameters
 #         if (self.n_iters == 1) and (phenograph_parameters.get('prune') is True):
-#             warn_msg = ("Using phenograph parameter prune=False is strongly recommended when " +
+#             warn_msg <- ("Using phenograph parameter prune=False is strongly recommended when " +
 #                         "running only one iteration. Otherwise, expect many NaN labels.")
 #             warnings.warn(warn_msg)
 # 
 #         if not self.replace and self.boost_rate > 0.5:
-#             warn_msg = ("boost_rate is trimmed to 0.5 when replace=False." +
+#             warn_msg <- ("boost_rate is trimmed to 0.5 when replace=False." +
 #                         " Set replace=True to use greater boost rates.")
 #             warnings.warn(warn_msg)
-#             self.boost_rate = 0.5
+#             self.boost_rate <- 0.5
 # 
 #         assert (self.n_top_var_genes == 0) or (self.n_components <= self.n_top_var_genes), (
 #             "n_components={0} cannot be larger than n_top_var_genes={1}".format(n_components,
@@ -203,34 +196,34 @@ hello <- function() {
 #             The fitted classifier.
 #         """
 #         try:
-#             raw_counts = check_array(raw_counts, accept_sparse=False, force_all_finite=True,
+#             raw_counts <- check_array(raw_counts, accept_sparse=False, force_all_finite=True,
 #                                      ensure_2d=True)
 #         except TypeError:   # Only catches sparse error. Non-finite & n_dims still raised.
 #             warnings.warn("Sparse raw_counts is automatically densified.")
-#             raw_counts = raw_counts.toarray()
+#             raw_counts <- raw_counts.toarray()
 # 
 #         if self.n_top_var_genes > 0:
 #             if self.n_top_var_genes < raw_counts.shape[1]:
-#                 gene_variances = np.var(raw_counts, axis=0)
-#                 top_var_indexes = np.argsort(gene_variances)
-#                 self.top_var_genes_ = top_var_indexes[-self.n_top_var_genes:]
-#                 raw_counts = raw_counts[:, self.top_var_genes_]
+#                 gene_variances <- np.var(raw_counts, axis=0)
+#                 top_var_indexes <- np.argsort(gene_variances)
+#                 self.top_var_genes_ <- top_var_indexes[-self.n_top_var_genes:]
+#                 raw_counts <- raw_counts[:, self.top_var_genes_]
 # 
-#         self._raw_counts = raw_counts
-#         (self._num_cells, self._num_genes) = self._raw_counts.shape
+#         self._raw_counts <- raw_counts
+#         (self._num_cells, self._num_genes) <- self._raw_counts.shape
 # 
-#         self.all_scores_ = np.zeros((self.n_iters, self._num_cells))
-#         self.all_p_values_ = np.zeros((self.n_iters, self._num_cells))
-#         all_communities = np.zeros((self.n_iters, self._num_cells))
-#         all_parents = []
-#         all_synth_communities = np.zeros((self.n_iters, int(self.boost_rate * self._num_cells)))
+#         self.all_scores_ <- np.zeros((self.n_iters, self._num_cells))
+#         self.all_p_values_ <- np.zeros((self.n_iters, self._num_cells))
+#         all_communities <- np.zeros((self.n_iters, self._num_cells))
+#         all_parents <- []
+#         all_synth_communities <- np.zeros((self.n_iters, int(self.boost_rate * self._num_cells)))
 # 
 #         for i in range(self.n_iters):
 #             print("Iteration {:3}/{}".format(i + 1, self.n_iters))
-#             self.all_scores_[i], self.all_p_values_[i] = self._one_fit()
-#             all_communities[i] = self.communities_
+#             self.all_scores_[i], self.all_p_values_[i] <- self._one_fit()
+#             all_communities[i] <- self.communities_
 #             all_parents.append(self.parents_)
-#             all_synth_communities[i] = self.synth_communities_
+#             all_synth_communities[i] <- self.synth_communities_
 # 
 #         # Release unneeded large data vars
 #         del self._raw_counts
@@ -238,9 +231,9 @@ hello <- function() {
 #         del self._raw_synthetics
 #         del self._synthetics
 # 
-#         self.communities_ = all_communities
-#         self.parents_ = all_parents
-#         self.synth_communities_ = all_synth_communities
+#         self.communities_ <- all_communities
+#         self.parents_ <- all_parents
+#         self.synth_communities_ <- all_synth_communities
 # 
 #         return self
 # 
@@ -262,20 +255,20 @@ hello <- function() {
 #         """
 #         if self.n_iters > 1:
 #             with np.errstate(invalid='ignore'):  # Silence numpy warning about NaN comparison
-#                 self.voting_average_ = np.mean(np.ma.masked_invalid(self.all_p_values_) > p_thresh,
+#                 self.voting_average_ <- np.mean(np.ma.masked_invalid(self.all_p_values_) > p_thresh,
 #                                                axis=0)
-#                 self.labels_ = np.ma.filled(self.voting_average_ >= voter_thresh, np.nan)
-#                 self.voting_average_ = np.ma.filled(self.voting_average_, np.nan)
+#                 self.labels_ <- np.ma.filled(self.voting_average_ >= voter_thresh, np.nan)
+#                 self.voting_average_ <- np.ma.filled(self.voting_average_, np.nan)
 #         else:
 #             # Find a cutoff score
-#             potential_cutoffs = np.unique(self.all_scores_[~np.isnan(self.all_scores_)])
+#             potential_cutoffs <- np.unique(self.all_scores_[~np.isnan(self.all_scores_)])
 #             if len(potential_cutoffs) > 1:
-#                 max_dropoff = np.argmax(potential_cutoffs[1:] - potential_cutoffs[:-1]) + 1
+#                 max_dropoff <- np.argmax(potential_cutoffs[1:] - potential_cutoffs[:-1]) + 1
 #             else:   # Most likely pathological dataset, only one (or no) clusters
-#                 max_dropoff = 0
-#             self.suggested_score_cutoff_ = potential_cutoffs[max_dropoff]
+#                 max_dropoff <- 0
+#             self.suggested_score_cutoff_ <- potential_cutoffs[max_dropoff]
 #             with np.errstate(invalid='ignore'):  # Silence numpy warning about NaN comparison
-#                 self.labels_ = self.all_scores_[0, :] >= self.suggested_score_cutoff_
+#                 self.labels_ <- self.all_scores_[0, :] >= self.suggested_score_cutoff_
 # 
 #         return self.labels_
 # 
@@ -285,20 +278,20 @@ hello <- function() {
 # 
 #         # Normalize combined augmented set
 #         print("Normalizing...")
-#         aug_counts = self.normalizer(np.append(self._raw_counts, self._raw_synthetics, axis=0))
-#         self._norm_counts = aug_counts[:self._num_cells]
-#         self._synthetics = aug_counts[self._num_cells:]
+#         aug_counts <- self.normalizer(np.append(self._raw_counts, self._raw_synthetics, axis=0))
+#         self._norm_counts <- aug_counts[:self._num_cells]
+#         self._synthetics <- aug_counts[self._num_cells:]
 # 
 #         print("Running PCA...")
 #         # Get phenograph results
-#         pca = PCA(n_components=self.n_components)
-#         reduced_counts = pca.fit_transform(aug_counts)
+#         pca <- PCA(n_components=self.n_components)
+#         reduced_counts <- pca.fit_transform(aug_counts)
 #         print("Clustering augmented data set with Phenograph...\n")
-#         fullcommunities, _, _ = phenograph.cluster(reduced_counts, **self.phenograph_parameters)
-#         min_ID = min(fullcommunities)
-#         self.communities_ = fullcommunities[:self._num_cells]
-#         self.synth_communities_ = fullcommunities[self._num_cells:]
-#         community_sizes = [np.count_nonzero(fullcommunities == i)
+#         fullcommunities, _, _ <- phenograph.cluster(reduced_counts, **self.phenograph_parameters)
+#         min_ID <- min(fullcommunities)
+#         self.communities_ <- fullcommunities[:self._num_cells]
+#         self.synth_communities_ <- fullcommunities[self._num_cells:]
+#         community_sizes <- [np.count_nonzero(fullcommunities == i)
 #                            for i in np.unique(fullcommunities)]
 #         print("Found communities [{0}, ... {2}], with sizes: {1}\n".format(min(fullcommunities),
 #                                                                            community_sizes,
@@ -306,23 +299,23 @@ hello <- function() {
 # 
 #         # Count number of fake doublets in each community and assign score
 #         # Number of synth/orig cells in each cluster.
-#         synth_cells_per_comm = collections.Counter(self.synth_communities_)
-#         orig_cells_per_comm = collections.Counter(self.communities_)
-#         community_IDs = orig_cells_per_comm.keys()
-#         community_scores = {i: float(synth_cells_per_comm[i]) /
+#         synth_cells_per_comm <- collections.Counter(self.synth_communities_)
+#         orig_cells_per_comm <- collections.Counter(self.communities_)
+#         community_IDs <- orig_cells_per_comm.keys()
+#         community_scores <- {i: float(synth_cells_per_comm[i]) /
 #                             (synth_cells_per_comm[i] + orig_cells_per_comm[i])
 #                             for i in community_IDs}
-#         scores = np.array([community_scores[i] for i in self.communities_])
+#         scores <- np.array([community_scores[i] for i in self.communities_])
 # 
-#         community_p_values = {i: hypergeom.cdf(synth_cells_per_comm[i], aug_counts.shape[0],
+#         community_p_values <- {i: hypergeom.cdf(synth_cells_per_comm[i], aug_counts.shape[0],
 #                                             self._synthetics.shape[0],
 #                                             synth_cells_per_comm[i] + orig_cells_per_comm[i])
 #                               for i in community_IDs}
-#         p_values = np.array([community_p_values[i] for i in self.communities_])
+#         p_values <- np.array([community_p_values[i] for i in self.communities_])
 # 
 #         if min_ID < 0:
-#             scores[self.communities_ == -1] = np.nan
-#             p_values[self.communities_ == -1] = np.nan
+#             scores[self.communities_ == -1] <- np.nan
+#             p_values[self.communities_ == -1] <- np.nan
 # 
 #         return scores, p_values
 # 
@@ -336,15 +329,15 @@ hello <- function() {
 #         Returns:
 #             ndarray, ndim=1: Downsampled gene count vector.
 #         """
-#         new_cell = cell1 + cell2
+#         new_cell <- cell1 + cell2
 # 
-#         lib1 = np.sum(cell1)
-#         lib2 = np.sum(cell2)
-#         new_lib_size = int(self.new_lib_as([lib1, lib2]))
-#         mol_ind = np.random.permutation(int(lib1 + lib2))[:new_lib_size]
+#         lib1 <- np.sum(cell1)
+#         lib2 <- np.sum(cell2)
+#         new_lib_size <- int(self.new_lib_as([lib1, lib2]))
+#         mol_ind <- np.random.permutation(int(lib1 + lib2))[:new_lib_size]
 #         mol_ind += 1
-#         bins = np.append(np.zeros((1)), np.cumsum(new_cell))
-#         new_cell = np.histogram(mol_ind, bins)[0]
+#         bins <- np.append(np.zeros((1)), np.cumsum(new_cell))
+#         new_cell <- np.histogram(mol_ind, bins)[0]
 # 
 #         return new_cell
 # 
@@ -354,20 +347,20 @@ hello <- function() {
 #         Sets .parents_
 #         """
 #         # Number of synthetic doublets to add
-#         num_synths = int(self.boost_rate * self._num_cells)
-#         synthetic = np.zeros((num_synths, self._num_genes))
-#         parents = []
+#         num_synths <- int(self.boost_rate * self._num_cells)
+#         synthetic <- np.zeros((num_synths, self._num_genes))
+#         parents <- []
 # 
-#         choices = np.random.choice(self._num_cells, size=(num_synths, 2), replace=self.replace)
+#         choices <- np.random.choice(self._num_cells, size=(num_synths, 2), replace=self.replace)
 #         for i, parent_pair in enumerate(choices):
-#             row1 = parent_pair[0]
-#             row2 = parent_pair[1]
+#             row1 <- parent_pair[0]
+#             row2 <- parent_pair[1]
 #             if self.new_lib_as is not None:
-#                 new_row = self._downsampleCellPair(self._raw_counts[row1], self._raw_counts[row2])
+#                 new_row <- self._downsampleCellPair(self._raw_counts[row1], self._raw_counts[row2])
 #             else:
-#                 new_row = self._raw_counts[row1] + self._raw_counts[row2]
-#             synthetic[i] = new_row
+#                 new_row <- self._raw_counts[row1] + self._raw_counts[row2]
+#             synthetic[i] <- new_row
 #             parents.append([row1, row2])
 # 
-#         self._raw_synthetics = synthetic
-#         self.parents_ = parents
+#         self._raw_synthetics <- synthetic
+#         self.parents_ <- parents
