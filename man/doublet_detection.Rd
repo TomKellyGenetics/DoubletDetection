@@ -4,11 +4,14 @@
 \alias{doublet_detection}
 \alias{normalize_counts}
 \alias{load_10x_h5}
+\alias{load_mtx}
 \title{Doublet detection in single-cell RNA-seq data}
 \usage{
 normalize_counts(raw_counts, pseudocount = 0.1)
 
-load_10x_h5(file, genome)
+load_10x_h5(file, genome = NULL, barcode_filtered = TRUE)
+
+load_mtx(file)
 }
 \arguments{
 \item{raw_counts}{a matrix or data.frame containing raw UMI counts such as a gene-barcode matrix  (genes or transcripts by cell barcode).}
@@ -17,7 +20,9 @@ load_10x_h5(file, genome)
 
 \item{file}{string: path to H5 file}
 
-\item{genom}{string: path to top level H5 group}
+\item{genome}{string: path to top level H5 group}
+
+\item{file}{string: path to mtx file}
 }
 \description{
 Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
