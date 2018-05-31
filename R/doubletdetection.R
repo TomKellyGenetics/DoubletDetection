@@ -32,6 +32,41 @@ normalize_counts <- function(raw_counts, pseudocount=0.1){
   return(normed)
 }
 
+##' @rdname doublet_detection
+##' 
+##' @param file string: path to H5 file
+##' @param genom string: path to top level H5 group
+##' @import Matrix
+##' 
+##' @export
+load_10x_h5 <- function(file, genome){
+  #     Load count matrix in 10x H5 format
+  #        Adapted from:
+  #        https://support.10xgenomics.com/single-cell-gene-expression/software/
+  #        pipelines/latest/advanced/h5_matrices
+  # 
+  #     Args:
+  #         file (str): Path to H5 file
+  #         genome (str): genome, top level h5 group
+  # 
+  #     Returns:
+  #         ndarray: Raw count matrix.
+  #         ndarray: Barcodes
+  #         ndarray: Gene names
+  if(file.exists(file)){
+    group <- normalizePath(paste(dirname(file), "filtered_gene_bc_matrices", genome, sep = "/", collapse = ""))
+  } else{
+    warning("That genome does not exist in this file")
+    return(NULL)
+  }
+  gene_names <- read.table(paste(group, "genes.tsv", sep = "/"))[,1]
+  barcodes <- readLines(paste(group, "barcodes.tsv", sep = "/"))
+  data <- readMM(paste(group, "matrix.mtx", sep = "/"))
+  rownames(data) <- gene_names
+  colnames(data) <- barcodes
+  dense_matrix <- as.matrix(data)
+  return(list(dense_matrix, barcodes, gene_names))
+}
 
 # import collections
 # import warnings
@@ -49,39 +84,7 @@ normalize_counts <- function(raw_counts, pseudocount=0.1){
 
 # 
 # 
-# def load_10x_h5(file, genome):
-#     """Load count matrix in 10x H5 format
-#        Adapted from:
-#        https://support.10xgenomics.com/single-cell-gene-expression/software/
-#        pipelines/latest/advanced/h5_matrices
-# 
-#     Args:
-#         file (str): Path to H5 file
-#         genome (str): genome, top level h5 group
-# 
-#     Returns:
-#         ndarray: Raw count matrix.
-#         ndarray: Barcodes
-#         ndarray: Gene names
-#     """
-# 
-#     with tables.open_file(file, 'r') as f:
-#         try:
-#             group <- f.get_node(f.root, genome)
-#         except tables.NoSuchNodeError:
-#             print("That genome does not exist in this file.")
-#             return None
-#     # gene_ids <- getattr(group, 'genes').read()
-#     gene_names <- getattr(group, 'gene_names').read()
-#     barcodes <- getattr(group, 'barcodes').read()
-#     data <- getattr(group, 'data').read()
-#     indices <- getattr(group, 'indices').read()
-#     indptr <- getattr(group, 'indptr').read()
-#     shape <- getattr(group, 'shape').read()
-#     matrix <- sp_sparse.csc_matrix((data, indices, indptr), shape=shape)
-#     dense_matrix <- matrix.toarray()
-# 
-#     return dense_matrix, barcodes, gene_names
+
 # 
 # 
 # def load_mtx(file):
