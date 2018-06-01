@@ -192,11 +192,13 @@ BoostClassifier <- setRefClass(
   fields = list(
     boost_rate = "numeric", #ANY for no type specified (all passed on)
     n_components = "integer",
+    n_top_var_genes = "integer",
     new_lib_as = "ANY",
     replace = "logical",
     phenograph_parameters = "list",
     n_iters = "integer",
-    raw_counts = "ANY"
+    raw_counts = "ANY",
+    normalizer = "function"
   ),
   methods = list(
     initialize = function(boost_rate = 0.25,
@@ -267,7 +269,7 @@ BoostClassifier <- setRefClass(
       }
          
       # Floor negative n_top_var_genes by 0
-      n_top_var_genes <<- max(0, n_top_var_genes)
+      n_top_var_genes <<- as.integer(max(0, n_top_var_genes))
 
       if(!("prune" %in% names(phenograph_parameters))){
         phenograph_parameters$prune <<- TRUE
