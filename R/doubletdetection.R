@@ -350,16 +350,18 @@ BoostClassifier <- setRefClass(
       all_synth_communities[i] <<- synth_communities_
     }
     # Release unneeded large data vars
-    attr(self, "raw_counts") <- NULL
-    attr(self, "norm_counts") <- NULL
-    attr(self, "rawsynthetics") <- NULL
-    attr(self, "synthetics") <- NULL
+    rm(raw_counts, norm_counts, rawsynthetics, synthetics)
+    #attr(self, "raw_counts") <- NULL
+    #attr(self, "norm_counts") <- NULL
+    #attr(self, "rawsynthetics") <- NULL
+    #attr(self, "synthetics") <- NULL
     
     communities_ <<- all_communities
     parents_ <<- all_parents
     synth_communities_ <<- all_synth_communities
     
-    return(self)
+    self <- list(all_scores_, all_p_values_, communities_, top_var_genes, parents, synth_communities_)
+    #return(self)
     },
     doubleY = function()
     {
