@@ -187,6 +187,8 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @field n_iters (integer optional): Number of fit operations from which to collect p-values. Defualt value is 25. normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
 ##' @field normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
 ##' @field raw_counts (array-like): Count matrix, oriented cells by genes.
+##' @field p_thresh (numeric, optional): hypergeometric test p-value threshold that determines per iteration doublet calls
+##' @field voter_thresh (numeric, optional): fraction of iterations a cell must be called a doublet
 BoostClassifier <- setRefClass(
   "BoostClassifier",
   fields = list(
@@ -197,8 +199,10 @@ BoostClassifier <- setRefClass(
     replace = "logical",
     phenograph_parameters = "list",
     n_iters = "integer",
+    normalizer = "function",
     raw_counts = "ANY",
-    normalizer = "function"
+    p_thres = "numeric",
+    voter_thres = "numeric"
   ),
   methods = list(
     initialize = function(boost_rate = 0.25,
@@ -330,6 +334,7 @@ BoostClassifier <- setRefClass(
           }
       }
     #initialise self object
+    #self <- list()
     raw_counts <<- raw_counts
     num_genes <<- nrow(raw_counts)
     num_cells <<- ncol(raw_counts)
@@ -363,9 +368,37 @@ BoostClassifier <- setRefClass(
     self <- list(all_scores_, all_p_values_, communities_, top_var_genes, parents, synth_communities_)
     #return(self)
     },
-    doubleY = function()
-    {
-      2 * y
+    predict = function(p_thresh = 0.99, voter_thresh = 0.9){ #Produce doublet calls from fitted classifier
+      #         Args:
+      #             p_thresh (numeric, optional): hypergeometric test p-value threshold
+      #                 that determines per iteration doublet calls
+      #             voter_thresh (numeric, optional): fraction of iterations a cell must
+      #                 be called a doublet
+      # 
+      #         Sets:
+      #             labels_ and voting_average_ if n_iters > 1.
+      #             labels_ and suggested_score_cutoff_ if n_iters == 1.
+      # 
+      #         Returns:
+      #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
+      if(n_iters > 1){
+        voting_average_ <- apply(all_p_values_, 1, function(x) mean(x, na.rm = TRUE) > p_thresh)
+        labels_ <- ifelse(voting_average_ >= voter_thresh, voting_average_ >= voter_thresh, NA)
+        voting_average_ <- ifelse(voting_average_, voting_average_, NA)
+      } else{
+        # Find a cutoff score
+        potential_cutoffs <- unique(all_scores_[is.na(all_scores_) == FALSE])
+        if(length(potential_cutoffs) > 1){
+          dropoff <- potential_cutoffs[2:length(potential_cutoffs)] - potential_cutoffs[1:(1-length(potential_cutoffs))]
+          max_dropoff <- which(dropoff == max(dropoff)) #+ 1
+        } else {
+          # Most likely pathological dataset, only one (or no) clusters
+          max_dropoff <- 1
+          suggested_score_cutoff_ <- potential_cutoffs[max_dropoff]
+          labels_ <- all_scores_[1,] >= suggested_score_cutoff_ #Allow NA values
+        }
+      }
+      return(labels_)
     },
     printInput = function(input)
     {
@@ -389,38 +422,7 @@ BoostClassifier <- setRefClass(
 # 
 #     def predict(self, p_thresh=0.99, voter_thresh=0.9):
 #         """Produce doublet calls from fitted classifier
-# 
-#         Args:
-#             p_thresh (numeric, optional): hypergeometric test p-value threshold
-#                 that determines per iteration doublet calls
-#             voter_thresh (numeric, optional): fraction of iterations a cell must
-#                 be called a doublet
-# 
-#         Sets:
-#             labels_ and voting_average_ if n_iters > 1.
-#             labels_ and suggested_score_cutoff_ if n_iters == 1.
-# 
-#         Returns:
-#             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
-#         """
-#         if n_iters > 1:
-#             with np.errstate(invalid='ignore'):  # Silence numpy warning about NaN comparison
-#                 voting_average_ <- np.mean(np.ma.masked_invalid(all_p_values_) > p_thresh,
-#                                                axis=0)
-#                 labels_ <- np.ma.filled(voting_average_ >= voter_thresh, np.nan)
-#                 voting_average_ <- np.ma.filled(voting_average_, np.nan)
-#         else:
-#             # Find a cutoff score
-#             potential_cutoffs <- np.unique(all_scores_[~np.isnan(all_scores_)])
-#             if len(potential_cutoffs) > 1:
-#                 max_dropoff <- np.argmax(potential_cutoffs[1:] - potential_cutoffs[:-1]) + 1
-#             else:   # Most likely pathological dataset, only one (or no) clusters
-#                 max_dropoff <- 0
-#             suggested_score_cutoff_ <- potential_cutoffs[max_dropoff]
-#             with np.errstate(invalid='ignore'):  # Silence numpy warning about NaN comparison
-#                 labels_ <- all_scores_[0, :] >= suggested_score_cutoff_
-# 
-#         return labels_
+
 # 
 #     def one_fit_temp(self):
 #         print("\nCreating downsampled doublets...")
