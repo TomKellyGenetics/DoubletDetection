@@ -6,7 +6,7 @@
 ##' @description Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
 ##' 
 ##' @param raw_counts a matrix or data.frame containing raw UMI counts such as a gene-barcode matrix  (genes or transcripts by cell barcode).
-##' @param pseudocount a float to add prior to log-transform (to avoid non-zero values).
+##' @param pseudocount a numeric to add prior to log-transform (to avoid non-zero values).
 ##' 
 ##' @keywords scRNA quality filter matrix normalise doublets single-cell
 ##' @export
@@ -15,7 +15,7 @@ normalize_counts <- function(raw_counts, pseudocount=0.1){
   # 
   # Args:
   # raw_counts (ndarray): count data
-  # pseudocount (float, optional): Count to add prior to log transform.
+  # pseudocount (numeric, optional): Count to add prior to log transform.
   # 
   # Returns:
   # ndarray: Normalized data.
@@ -34,8 +34,8 @@ normalize_counts <- function(raw_counts, pseudocount=0.1){
 
 ##' @rdname doublet_detection
 ##' 
-##' @param file string: path to H5 file
-##' @param genome string: path to top level H5 group
+##' @param file character: path to H5 file
+##' @param genome character: path to top level H5 group
 ##' @import hdf5r Matrix
 ##' 
 ##' @export
@@ -89,7 +89,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
   
 ##' @rdname doublet_detection
 ##' 
-##' @param file string: path to mtx file
+##' @param file character: path to mtx file
 ##' @import Matrix
 ##' 
 ##' @export
@@ -116,46 +116,190 @@ load_mtx <- function(file){
   return(raw_counts)
 }
 
-# import collections
-# import warnings
-# 
-# import numpy as np
-# import phenograph
-# from sklearn.decomposition import PCA
-# from sklearn.utils import check_array
-# from scipy.io import mmread
-# from scipy.stats import hypergeom
-# import scipy.sparse as sp_sparse
-# import tables
-# 
+##' @rdname doublet_detection
+##' 
+##' @param file character: path to H5 file
+##' @param genome character: path to top level H5 group
+##' @import hdf5r Matrix
+##' 
+##' @export
+load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
+  #     Load count matrix in 10x H5 format
+  #        Adapted from:
+  #        https://support.10xgenomics.com/single-cell-gene-expression/software/
+  #        pipelines/latest/advanced/h5_matrices
+  # 
+  #     Args:
+  #         file (str): Path to H5 file
+  #         genome (str): genome, top level h5 group
+  # 
+  #     Returns:
+  #         ndarray: Raw count matrix.
+  #         ndarray: Barcodes
+  #         ndarray: Gene names
+  if (!file.exists(normalizePath((file)))) 
+    stop("Could not find the path of file: '", file, 
+         "'. Please double-check if the directory exists.\n")
+  if (!dir.exists(normalizePath(paste(dirname(file))))) 
+    stop("Could not find the pipestance output directory: '", 
+         normalizePath(paste(dirname(file))), "'. Please double-check if the directory exists.\n")
+  h5_path <- file.path(normalizePath(paste(dirname(file))), ifelse(barcode_filtered, 
+                                                                   "filtered_gene_bc_matrices_h5.h5", "raw_gene_bc_matrices_h5.h5"))
+  if (!file.exists(h5_path)) {
+    stop(sprintf("Could not find matrix H5: %s\n", h5_path))
+  }
+  file.h5 <- H5File$new(h5_path, mode = "r")
+  #names(file.h5)
+  #file.h5$ls(recursive=TRUE)
+  
+  # gene_ids <- file.h5[[paste0(genome, "/genes")]][]
+  #gene_names <- eval(parse(text = paste0("file.h5[[\"", genome, "\"]][[\"gene_names\"]]")))[]
+  #barcodes <- eval(parse(text = paste0("file.h5[[\"", genome, "\"]]")))[["barcodes"]]
+  gene_names <- file.h5[[paste0(genome, "/gene_names")]][]
+  barcodes <- file.h5[[paste0(genome, "/barcodes")]][]
+  data <- file.h5[[paste0(genome, "/data")]][]
+  indices <- file.h5[[paste0(genome, "/indices")]][]
+  indptr <- file.h5[[paste0(genome, "/indptr")]][]
+  shape <- file.h5[[paste0(genome, "/shape")]][]
+  #h5attr_names(file.h5[[paste0(genome, "/shape")]])
+  matrix <- sparseMatrix(i = indices+1, p = indptr, x = data, dims = shape)
+  dense_matrix <- matrix(matrix, nrow = shape[1], ncol = shape[2])
+  
+  rownames(dense_matrix) <- gene_names
+  colnames(dense_matrix) <- barcodes
+  
+  return(dense_matrix)
+}
 
+##' @rdname doublet_detection
+##' Classifier for doublets in single-cell RNA-seq data
+##' 
+##' @param file character: path to mtx file
+##' @import Matrix
+##' 
+##' @export
+##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
+##' @field n_components (integer optional): Number of principal components used for clustering.
+##' @field n_top_var_genes (integer optional): Number of highest variance genes to use; other genes discarded. Will use all genes when zero.
+##' @field new_lib_as: (([integer integer]) -> integer optional): Method to use in choosing library size for synthetic doublets. Defaults to NULL which makes synthetic doublets the exact addition of its parents; alternative is new_lib_as=max.
+##' @field replace (logical, optional): If FALSE, a cell will be selected as a synthetic doublet's parent no more than once.
+##' @field phenograph_parameters (list, optional): Parameter dict to pass directly to Phenograph. Note that we change the Phenograph 'prune' default to TRUE; you must specifically include 'prune': FALSE here to change this.
+##' @field n_iters (integer optional): Number of fit operations from which to collect p-values. Defualt value is 25. normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
+BoostClassifier <-setRefClass(
+  "BoostClassifier",
+  fields = list(
+    boost_rate = "numeric", #ANY for no type specified (all passed on)
+    n_components = "integer",
+    new_lib_as = "integer",
+    replace = "logical",
+    phenograph_parameters = "list",
+    n_iters = "integer"
+  ),
+  methods = list(
+    initialize = function(boost_rate = 0.25,
+                          n_components = 30,
+                          n_top_var_genes = 10000,
+                          new_lib_as = NULL,
+                          replace = FALSE, 
+                          phenograph_parameters = list(prune = TRUE),
+                          n_iters = 25,
+                          normalizer=normalize_counts){
+      #     Parameters:
+      #         boost_rate (numeric, optional): Proportion of cell population size to
+      #             produce as synthetic doublets.
+      #         n_components (integer optional): Number of principal components used for
+      #             clustering.
+      #         n_top_var_genes (integer optional): Number of highest variance genes to
+      #             use; other genes discarded. Will use all genes when zero.
+      #         new_lib_as: (([integer int]) -> integer optional): Method to use in choosing
+      #             library size for synthetic doublets. Defaults to NULL which makes
+      #             synthetic doublets the exact addition of its parents; alternative
+      #             is new_lib_as=np.max.
+      #         replace (logical, optional): If FALSE, a cell will be selected as a
+      #             synthetic doublet's parent no more than once.
+      #         phenograph_parameters (dict, optional): Parameter dict to pass directly
+      #             to Phenograph. Note that we change the Phenograph 'prune' default to
+      #             TRUE; you must specifically include 'prune': FALSE here to change
+      #             this.
+      #         n_iters (integer optional): Number of fit operations from which to collect
+      #             p-values. Defualt value is 25.
+      #         normalizer ((ndarray) -> ndarray): Method to normalize raw_counts.
+      #             Defaults to normalize_counts, included in this package. Note: To use
+      #             normalize_counts with its pseudocount parameter changed from the
+      #             default 0.1 value to some positive numeric `new_var`, use:
+      #             normalizer=lambda counts: doubletdetection.normalize_counts(counts,
+      #             pseudocount=new_var)
+      # 
+      #     Attributes:
+      #         all_p_values_ (ndarray): Hypergeometric test p-value per cell for cluster
+      #             enrichment of synthetic doublets. Shape (n_iters, num_cells).
+      #         all_scores_ (ndarray): The fraction of a cell's cluster that is
+      #             synthetic doublets. Shape (n_iters, num_cells).
+      #         communities_ (ndarray): Cluster ID for corresponding cell. Shape
+      #             (n_iters, num_cells).
+      #         labels_ (ndarray, ndims=1): 0 for singlet, 1 for detected doublet.
+      #         parents_ (list of sequences of int): Parent cells' indexes for each
+      #             synthetic doublet. A list wrapping the results from each run.
+      #         suggested_score_cutoff_ (numeric): Cutoff used to classify cells when
+      #             n_iters == 1 (scores >= cutoff). Not produced when n_iters > 1.
+      #         synth_communities_ (sequence of ints): Cluster ID for corresponding
+      #             synthetic doublet. Shape (n_iters, num_cells * boost_rate).
+      #         top_var_genes_ (ndarray): Indices of the n_top_var_genes used. Not
+      #             generated if n_top_var_genes <= 0.
+      #         voting_average_ (ndarray): Fraction of iterations each cell is called a
+      #             doublet.
+      #code
+      #This method is called when you create an instance of the class.
+      x <<- x
+      y <<- y
+      z <<- z
+      print("You initialized MyClass!")
+    },
+    hello = function()
+    {
+      "This method returns the character 'hello'."
+      "hello"
+    },
+    doubleY = function()
+    {
+      2 * y
+    },
+    printInput = function(input)
+    {
+      if(missing(input)) stop("You must provide some input.")
+      print(input)
+    }
+  )
+)
+
+##' @example 
 # 
 # class BoostClassifier:
 #     """Classifier for doublets in single-cell RNA-seq data.
 # 
 #     Parameters:
-#         boost_rate (float, optional): Proportion of cell population size to
+#         boost_rate (numeric, optional): Proportion of cell population size to
 #             produce as synthetic doublets.
-#         n_components (int, optional): Number of principal components used for
+#         n_components (integer optional): Number of principal components used for
 #             clustering.
-#         n_top_var_genes (int, optional): Number of highest variance genes to
+#         n_top_var_genes (integer optional): Number of highest variance genes to
 #             use; other genes discarded. Will use all genes when zero.
-#         new_lib_as: (([int, int]) -> int, optional): Method to use in choosing
-#             library size for synthetic doublets. Defaults to None which makes
+#         new_lib_as: (([integer int]) -> integer optional): Method to use in choosing
+#             library size for synthetic doublets. Defaults to NULL which makes
 #             synthetic doublets the exact addition of its parents; alternative
 #             is new_lib_as=np.max.
-#         replace (bool, optional): If False, a cell will be selected as a
+#         replace (logical, optional): If FALSE, a cell will be selected as a
 #             synthetic doublet's parent no more than once.
 #         phenograph_parameters (dict, optional): Parameter dict to pass directly
 #             to Phenograph. Note that we change the Phenograph 'prune' default to
-#             True; you must specifically include 'prune': False here to change
+#             TRUE; you must specifically include 'prune': FALSE here to change
 #             this.
-#         n_iters (int, optional): Number of fit operations from which to collect
+#         n_iters (integer optional): Number of fit operations from which to collect
 #             p-values. Defualt value is 25.
 #         normalizer ((ndarray) -> ndarray): Method to normalize raw_counts.
 #             Defaults to normalize_counts, included in this package. Note: To use
 #             normalize_counts with its pseudocount parameter changed from the
-#             default 0.1 value to some positive float `new_var`, use:
+#             default 0.1 value to some positive numeric `new_var`, use:
 #             normalizer=lambda counts: doubletdetection.normalize_counts(counts,
 #             pseudocount=new_var)
 # 
@@ -169,7 +313,7 @@ load_mtx <- function(file){
 #         labels_ (ndarray, ndims=1): 0 for singlet, 1 for detected doublet.
 #         parents_ (list of sequences of int): Parent cells' indexes for each
 #             synthetic doublet. A list wrapping the results from each run.
-#         suggested_score_cutoff_ (float): Cutoff used to classify cells when
+#         suggested_score_cutoff_ (numeric): Cutoff used to classify cells when
 #             n_iters == 1 (scores >= cutoff). Not produced when n_iters > 1.
 #         synth_communities_ (sequence of ints): Cluster ID for corresponding
 #             synthetic doublet. Shape (n_iters, num_cells * boost_rate).
@@ -179,8 +323,8 @@ load_mtx <- function(file){
 #             doublet.
 #     """
 # 
-#     def __init__(self, boost_rate=0.25, n_components=30, n_top_var_genes=10000, new_lib_as=None,
-#                  replace=False, phenograph_parameters={'prune': True}, n_iters=25,
+#     def __init__(self, boost_rate=0.25, n_components=30, n_top_var_genes=10000, new_lib_as=NULL,
+#                  replace=FALSE, phenograph_parameters={'prune': TRUE}, n_iters=25,
 #                  normalizer=normalize_counts):
 #         self.boost_rate <- boost_rate
 #         self.new_lib_as <- new_lib_as
@@ -197,16 +341,16 @@ load_mtx <- function(file){
 #         self.n_top_var_genes <- max(0, n_top_var_genes)
 # 
 #         if 'prune' not in phenograph_parameters:
-#             phenograph_parameters['prune'] <- True
+#             phenograph_parameters['prune'] <- TRUE
 #         self.phenograph_parameters <- phenograph_parameters
-#         if (self.n_iters == 1) and (phenograph_parameters.get('prune') is True):
-#             warn_msg <- ("Using phenograph parameter prune=False is strongly recommended when " +
+#         if (self.n_iters == 1) and (phenograph_parameters.get('prune') is TRUE):
+#             warn_msg <- ("Using phenograph parameter prune=FALSE is strongly recommended when " +
 #                         "running only one iteration. Otherwise, expect many NaN labels.")
 #             warnings.warn(warn_msg)
 # 
 #         if not self.replace and self.boost_rate > 0.5:
-#             warn_msg <- ("boost_rate is trimmed to 0.5 when replace=False." +
-#                         " Set replace=True to use greater boost rates.")
+#             warn_msg <- ("boost_rate is trimmed to 0.5 when replace=FALSE." +
+#                         " Set replace=TRUE to use greater boost rates.")
 #             warnings.warn(warn_msg)
 #             self.boost_rate <- 0.5
 # 
@@ -228,8 +372,8 @@ load_mtx <- function(file){
 #             The fitted classifier.
 #         """
 #         try:
-#             raw_counts <- check_array(raw_counts, accept_sparse=False, force_all_finite=True,
-#                                      ensure_2d=True)
+#             raw_counts <- check_array(raw_counts, accept_sparse=FALSE, force_all_finite=TRUE,
+#                                      ensure_2d=TRUE)
 #         except TypeError:   # Only catches sparse error. Non-finite & n_dims still raised.
 #             warnings.warn("Sparse raw_counts is automatically densified.")
 #             raw_counts <- raw_counts.toarray()
@@ -273,9 +417,9 @@ load_mtx <- function(file){
 #         """Produce doublet calls from fitted classifier
 # 
 #         Args:
-#             p_thresh (float, optional): hypergeometric test p-value threshold
+#             p_thresh (numeric, optional): hypergeometric test p-value threshold
 #                 that determines per iteration doublet calls
-#             voter_thresh (float, optional): fraction of iterations a cell must
+#             voter_thresh (numeric, optional): fraction of iterations a cell must
 #                 be called a doublet
 # 
 #         Sets:
@@ -334,7 +478,7 @@ load_mtx <- function(file){
 #         synth_cells_per_comm <- collections.Counter(self.synth_communities_)
 #         orig_cells_per_comm <- collections.Counter(self.communities_)
 #         community_IDs <- orig_cells_per_comm.keys()
-#         community_scores <- {i: float(synth_cells_per_comm[i]) /
+#         community_scores <- {i: numeric(synth_cells_per_comm[i]) /
 #                             (synth_cells_per_comm[i] + orig_cells_per_comm[i])
 #                             for i in community_IDs}
 #         scores <- np.array([community_scores[i] for i in self.communities_])
@@ -387,7 +531,7 @@ load_mtx <- function(file){
 #         for i, parent_pair in enumerate(choices):
 #             row1 <- parent_pair[0]
 #             row2 <- parent_pair[1]
-#             if self.new_lib_as is not None:
+#             if self.new_lib_as is not NULL:
 #                 new_row <- self._downsampleCellPair(self._raw_counts[row1], self._raw_counts[row2])
 #             else:
 #                 new_row <- self._raw_counts[row1] + self._raw_counts[row2]
@@ -396,3 +540,16 @@ load_mtx <- function(file){
 # 
 #         self._raw_synthetics <- synthetic
 #         self.parents_ <- parents
+
+
+# import collections
+# import warnings
+# 
+# import numpy as np
+# import phenograph
+# from sklearn.decomposition import PCA
+# from sklearn.utils import check_array
+# from scipy.io import mmread
+# from scipy.stats import hypergeom
+# import scipy.sparse as sp_sparse
+# import tables
