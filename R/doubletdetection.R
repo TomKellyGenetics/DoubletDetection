@@ -174,8 +174,8 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @rdname doublet_detection
 ##' Classifier for doublets in single-cell RNA-seq data
 ##' 
-##' @param file character: path to mtx file
-##' @import Matrix
+##' @param raw_counts (array-like): Count matrix, oriented cells by genes.
+##' @import Matrix checkmate assertthat
 ##' 
 ##' @export
 ##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
@@ -185,25 +185,28 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @field replace (logical, optional): If FALSE, a cell will be selected as a synthetic doublet's parent no more than once.
 ##' @field phenograph_parameters (list, optional): Parameter dict to pass directly to Phenograph. Note that we change the Phenograph 'prune' default to TRUE; you must specifically include 'prune': FALSE here to change this.
 ##' @field n_iters (integer optional): Number of fit operations from which to collect p-values. Defualt value is 25. normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
-BoostClassifier <-setRefClass(
+##' @field normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
+##' @field raw_counts (array-like): Count matrix, oriented cells by genes.
+BoostClassifier <- setRefClass(
   "BoostClassifier",
   fields = list(
     boost_rate = "numeric", #ANY for no type specified (all passed on)
     n_components = "integer",
-    new_lib_as = "integer",
+    new_lib_as = "ANY",
     replace = "logical",
     phenograph_parameters = "list",
-    n_iters = "integer"
+    n_iters = "integer",
+    raw_counts = "ANY"
   ),
   methods = list(
     initialize = function(boost_rate = 0.25,
-                          n_components = 30,
-                          n_top_var_genes = 10000,
+                          n_components = 30L,
+                          n_top_var_genes = 10000L,
                           new_lib_as = NULL,
                           replace = FALSE, 
                           phenograph_parameters = list(prune = TRUE),
-                          n_iters = 25,
-                          normalizer=normalize_counts){
+                          n_iters = 25L,
+                          normalizer = normalize_counts){
       #     Parameters:
       #         boost_rate (numeric, optional): Proportion of cell population size to
       #             produce as synthetic doublets.
@@ -250,15 +253,111 @@ BoostClassifier <-setRefClass(
       #             doublet.
       #code
       #This method is called when you create an instance of the class.
-      x <<- x
-      y <<- y
-      z <<- z
-      print("You initialized MyClass!")
+      boost_rate <<- boost_rate
+      new_lib_as <<- new_lib_as
+      replace <<- replace
+      n_iters <<- n_iters
+      normalizer <<- normalizer
+
+      if(n_components == 30 & n_top_var_genes > 0){
+        # If user did not change n_components, silently cap it by n_top_var_genes if needed
+        n_components <<- min(n_components, n_top_var_genes)
+      } else {
+        n_components <<- n_components
+      }
+         
+      # Floor negative n_top_var_genes by 0
+      n_top_var_genes <<- max(0, n_top_var_genes)
+
+      if(!("prune" %in% names(phenograph_parameters))){
+        phenograph_parameters$prune <<- TRUE
+      }
+      phenograph_parameters <<- phenograph_parameters
+      if(n_iters == 1 & phenograph_parameters$prune == TRUE){
+        warning("Using phenograph parameter prune=FALSE is strongly recommended when \n running only one iteration. Otherwise, expect many NaN labels.")
+      }
+  
+      if(replace == FALSE & boost_rate > 0.5){
+        warning("boost_rate is trimmed to 0.5 when replace=FALSE. \n Set replace=TRUE to use greater boost rates.")
+        boost_rate <<- 0.5
+      }
+      
+      if(!((n_top_var_genes == 0) || (n_components <= n_top_var_genes))){
+        stop(paste0("n_components=", n_components, " cannot be larger than n_top_var_genes=", n_top_var_genes))
+      }
+      print("Reference Class BoostClassifier has been initialized")
     },
-    hello = function()
-    {
-      "This method returns the character 'hello'."
-      "hello"
+    fit = function(raw_counts){
+      #Fits the classifier on raw_counts.
+      #         Args:
+      #             raw_counts (array-like): Count matrix, oriented cells by genes.
+      # 
+      #         Sets:
+      #             all_scores_, all_p_values_, communities_, top_var_genes, parents,
+      #             synth_communities
+      # 
+      #         Returns:
+      #             The fitted classifier.
+      if(!is.matrix(raw_counts) & length(dim(raw_counts)) == 2){ # Only catches sparse error. Non-finite & n_dims still raised.
+        if(is(raw_counts, "sparseMatrix")){
+          warning("Sparse raw_counts is automatically densified")
+          raw_counts <- as.matrix(raw_counts)
+        } else if(is.data.frame(raw_counts)){
+          warning("raw_counts data.frame automatically converted to type matrix")
+          raw_counts <- as.matrix(raw_counts)
+        } else {
+          warning("raw_counts requires matrix input \n Attempting to convert to type matrix.")
+          raw_counts <- as.matrix(raw_counts)
+        }
+      } else {
+        if(all(is.infinite(raw_counts))){
+          warning("raw_counts contains Non-finite values")
+        }
+      }
+      
+      if(n_top_var_genes > 0){
+          gene_variances <- apply(raw_counts, 1, var)
+          top_var_indexes <- sort(gene_variances)
+          if(n_top_var_genes < nrow(raw_counts)){
+            top_var_genes_ <- top_var_indexes[1:n_top_var_genes]
+            #filter to top genes
+            raw_counts <- raw_counts[, top_var_genes_]
+          } else {
+            warning("n_top_var_genes exceeds total genes \n processing full dataset")
+            top_var_genes_ <- top_var_indexes[1:min(n_top_var_genes, nrow(raw_counts))]
+          }
+      }
+    #initialise self object
+    raw_counts <<- raw_counts
+    num_genes <<- nrow(raw_counts)
+    num_cells <<- ncol(raw_counts)
+
+    all_scores_ <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
+    all_p_values_ <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
+    all_communities <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
+    
+    all_parents <<- list()
+    all_synth_communities <- matrix(rep(0, n_iters*as.integer(boost_rate * num_cells)), n_iters,as.integer(boost_rate * num_cells))
+    
+    for(i in 1:n_iters){
+      print(paste0("Iteration ", i, "/", n_iters))
+      all_scores_[i]  <<- one_fit_temp()
+      all_p_values_[i] <<- one_fit_temp()
+      all_communities[i] <<- communities_
+      all_parents <<- c(all_parents, parents_)
+      all_synth_communities[i] <<- synth_communities_
+    }
+    # Release unneeded large data vars
+    attr(self, "raw_counts") <- NULL
+    attr(self, "norm_counts") <- NULL
+    attr(self, "rawsynthetics") <- NULL
+    attr(self, "synthetics") <- NULL
+    
+    communities_ <<- all_communities
+    parents_ <<- all_parents
+    synth_communities_ <<- all_synth_communities
+    
+    return(self)
     },
     doubleY = function()
     {
@@ -276,142 +375,13 @@ BoostClassifier <-setRefClass(
 # 
 # class BoostClassifier:
 #     """Classifier for doublets in single-cell RNA-seq data.
-# 
-#     Parameters:
-#         boost_rate (numeric, optional): Proportion of cell population size to
-#             produce as synthetic doublets.
-#         n_components (integer optional): Number of principal components used for
-#             clustering.
-#         n_top_var_genes (integer optional): Number of highest variance genes to
-#             use; other genes discarded. Will use all genes when zero.
-#         new_lib_as: (([integer int]) -> integer optional): Method to use in choosing
-#             library size for synthetic doublets. Defaults to NULL which makes
-#             synthetic doublets the exact addition of its parents; alternative
-#             is new_lib_as=np.max.
-#         replace (logical, optional): If FALSE, a cell will be selected as a
-#             synthetic doublet's parent no more than once.
-#         phenograph_parameters (dict, optional): Parameter dict to pass directly
-#             to Phenograph. Note that we change the Phenograph 'prune' default to
-#             TRUE; you must specifically include 'prune': FALSE here to change
-#             this.
-#         n_iters (integer optional): Number of fit operations from which to collect
-#             p-values. Defualt value is 25.
-#         normalizer ((ndarray) -> ndarray): Method to normalize raw_counts.
-#             Defaults to normalize_counts, included in this package. Note: To use
-#             normalize_counts with its pseudocount parameter changed from the
-#             default 0.1 value to some positive numeric `new_var`, use:
-#             normalizer=lambda counts: doubletdetection.normalize_counts(counts,
-#             pseudocount=new_var)
-# 
-#     Attributes:
-#         all_p_values_ (ndarray): Hypergeometric test p-value per cell for cluster
-#             enrichment of synthetic doublets. Shape (n_iters, num_cells).
-#         all_scores_ (ndarray): The fraction of a cell's cluster that is
-#             synthetic doublets. Shape (n_iters, num_cells).
-#         communities_ (ndarray): Cluster ID for corresponding cell. Shape
-#             (n_iters, num_cells).
-#         labels_ (ndarray, ndims=1): 0 for singlet, 1 for detected doublet.
-#         parents_ (list of sequences of int): Parent cells' indexes for each
-#             synthetic doublet. A list wrapping the results from each run.
-#         suggested_score_cutoff_ (numeric): Cutoff used to classify cells when
-#             n_iters == 1 (scores >= cutoff). Not produced when n_iters > 1.
-#         synth_communities_ (sequence of ints): Cluster ID for corresponding
-#             synthetic doublet. Shape (n_iters, num_cells * boost_rate).
-#         top_var_genes_ (ndarray): Indices of the n_top_var_genes used. Not
-#             generated if n_top_var_genes <= 0.
-#         voting_average_ (ndarray): Fraction of iterations each cell is called a
-#             doublet.
-#     """
+#
 # 
 #     def __init__(self, boost_rate=0.25, n_components=30, n_top_var_genes=10000, new_lib_as=NULL,
 #                  replace=FALSE, phenograph_parameters={'prune': TRUE}, n_iters=25,
 #                  normalizer=normalize_counts):
-#         self.boost_rate <- boost_rate
-#         self.new_lib_as <- new_lib_as
-#         self.replace <- replace
-#         self.n_iters <- n_iters
-#         self.normalizer <- normalizer
 # 
-#         if n_components == 30 and n_top_var_genes > 0:
-#             # If user did not change n_components, silently cap it by n_top_var_genes if needed
-#             self.n_components <- min(n_components, n_top_var_genes)
-#         else:
-#             self.n_components <- n_components
-#         # Floor negative n_top_var_genes by 0
-#         self.n_top_var_genes <- max(0, n_top_var_genes)
-# 
-#         if 'prune' not in phenograph_parameters:
-#             phenograph_parameters['prune'] <- TRUE
-#         self.phenograph_parameters <- phenograph_parameters
-#         if (self.n_iters == 1) and (phenograph_parameters.get('prune') is TRUE):
-#             warn_msg <- ("Using phenograph parameter prune=FALSE is strongly recommended when " +
-#                         "running only one iteration. Otherwise, expect many NaN labels.")
-#             warnings.warn(warn_msg)
-# 
-#         if not self.replace and self.boost_rate > 0.5:
-#             warn_msg <- ("boost_rate is trimmed to 0.5 when replace=FALSE." +
-#                         " Set replace=TRUE to use greater boost rates.")
-#             warnings.warn(warn_msg)
-#             self.boost_rate <- 0.5
-# 
-#         assert (self.n_top_var_genes == 0) or (self.n_components <= self.n_top_var_genes), (
-#             "n_components={0} cannot be larger than n_top_var_genes={1}".format(n_components,
-#                                                                                 n_top_var_genes))
-# 
-#     def fit(self, raw_counts):
-#         """Fits the classifier on raw_counts.
-# 
-#         Args:
-#             raw_counts (array-like): Count matrix, oriented cells by genes.
-# 
-#         Sets:
-#             all_scores_, all_p_values_, communities_, top_var_genes, parents,
-#             synth_communities
-# 
-#         Returns:
-#             The fitted classifier.
-#         """
-#         try:
-#             raw_counts <- check_array(raw_counts, accept_sparse=FALSE, force_all_finite=TRUE,
-#                                      ensure_2d=TRUE)
-#         except TypeError:   # Only catches sparse error. Non-finite & n_dims still raised.
-#             warnings.warn("Sparse raw_counts is automatically densified.")
-#             raw_counts <- raw_counts.toarray()
-# 
-#         if self.n_top_var_genes > 0:
-#             if self.n_top_var_genes < raw_counts.shape[1]:
-#                 gene_variances <- np.var(raw_counts, axis=0)
-#                 top_var_indexes <- np.argsort(gene_variances)
-#                 self.top_var_genes_ <- top_var_indexes[-self.n_top_var_genes:]
-#                 raw_counts <- raw_counts[:, self.top_var_genes_]
-# 
-#         self._raw_counts <- raw_counts
-#         (self._num_cells, self._num_genes) <- self._raw_counts.shape
-# 
-#         self.all_scores_ <- np.zeros((self.n_iters, self._num_cells))
-#         self.all_p_values_ <- np.zeros((self.n_iters, self._num_cells))
-#         all_communities <- np.zeros((self.n_iters, self._num_cells))
-#         all_parents <- []
-#         all_synth_communities <- np.zeros((self.n_iters, int(self.boost_rate * self._num_cells)))
-# 
-#         for i in range(self.n_iters):
-#             print("Iteration {:3}/{}".format(i + 1, self.n_iters))
-#             self.all_scores_[i], self.all_p_values_[i] <- self._one_fit()
-#             all_communities[i] <- self.communities_
-#             all_parents.append(self.parents_)
-#             all_synth_communities[i] <- self.synth_communities_
-# 
-#         # Release unneeded large data vars
-#         del self._raw_counts
-#         del self._norm_counts
-#         del self._raw_synthetics
-#         del self._synthetics
-# 
-#         self.communities_ <- all_communities
-#         self.parents_ <- all_parents
-#         self.synth_communities_ <- all_synth_communities
-# 
-#         return self
+
 # 
 #     def predict(self, p_thresh=0.99, voter_thresh=0.9):
 #         """Produce doublet calls from fitted classifier
@@ -429,44 +399,44 @@ BoostClassifier <-setRefClass(
 #         Returns:
 #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
 #         """
-#         if self.n_iters > 1:
+#         if n_iters > 1:
 #             with np.errstate(invalid='ignore'):  # Silence numpy warning about NaN comparison
-#                 self.voting_average_ <- np.mean(np.ma.masked_invalid(self.all_p_values_) > p_thresh,
+#                 voting_average_ <- np.mean(np.ma.masked_invalid(all_p_values_) > p_thresh,
 #                                                axis=0)
-#                 self.labels_ <- np.ma.filled(self.voting_average_ >= voter_thresh, np.nan)
-#                 self.voting_average_ <- np.ma.filled(self.voting_average_, np.nan)
+#                 labels_ <- np.ma.filled(voting_average_ >= voter_thresh, np.nan)
+#                 voting_average_ <- np.ma.filled(voting_average_, np.nan)
 #         else:
 #             # Find a cutoff score
-#             potential_cutoffs <- np.unique(self.all_scores_[~np.isnan(self.all_scores_)])
+#             potential_cutoffs <- np.unique(all_scores_[~np.isnan(all_scores_)])
 #             if len(potential_cutoffs) > 1:
 #                 max_dropoff <- np.argmax(potential_cutoffs[1:] - potential_cutoffs[:-1]) + 1
 #             else:   # Most likely pathological dataset, only one (or no) clusters
 #                 max_dropoff <- 0
-#             self.suggested_score_cutoff_ <- potential_cutoffs[max_dropoff]
+#             suggested_score_cutoff_ <- potential_cutoffs[max_dropoff]
 #             with np.errstate(invalid='ignore'):  # Silence numpy warning about NaN comparison
-#                 self.labels_ <- self.all_scores_[0, :] >= self.suggested_score_cutoff_
+#                 labels_ <- all_scores_[0, :] >= suggested_score_cutoff_
 # 
-#         return self.labels_
+#         return labels_
 # 
-#     def _one_fit(self):
+#     def one_fit_temp(self):
 #         print("\nCreating downsampled doublets...")
-#         self._createDoublets()
+#         _createDoublets()
 # 
 #         # Normalize combined augmented set
 #         print("Normalizing...")
-#         aug_counts <- self.normalizer(np.append(self._raw_counts, self._raw_synthetics, axis=0))
-#         self._norm_counts <- aug_counts[:self._num_cells]
-#         self._synthetics <- aug_counts[self._num_cells:]
+#         aug_counts <- normalizer(np.append(raw_counts_temp, rawsynthetics_temp, axis=0))
+#         norm_counts <<- aug_counts[:num_cells]
+#         synthetics <<- aug_counts[num_cells:]
 # 
 #         print("Running PCA...")
 #         # Get phenograph results
-#         pca <- PCA(n_components=self.n_components)
+#         pca <- PCA(n_components=n_components)
 #         reduced_counts <- pca.fit_transform(aug_counts)
 #         print("Clustering augmented data set with Phenograph...\n")
-#         fullcommunities, _, _ <- phenograph.cluster(reduced_counts, **self.phenograph_parameters)
+#         fullcommunities, _, _ <- phenograph.cluster(reduced_counts, **phenograph_parameters)
 #         min_ID <- min(fullcommunities)
-#         self.communities_ <- fullcommunities[:self._num_cells]
-#         self.synth_communities_ <- fullcommunities[self._num_cells:]
+#         communities_ <- fullcommunities[:num_cells]
+#         synth_communities_ <- fullcommunities[num_cells:]
 #         community_sizes <- [np.count_nonzero(fullcommunities == i)
 #                            for i in np.unique(fullcommunities)]
 #         print("Found communities [{0}, ... {2}], with sizes: {1}\n".format(min(fullcommunities),
@@ -475,23 +445,23 @@ BoostClassifier <-setRefClass(
 # 
 #         # Count number of fake doublets in each community and assign score
 #         # Number of synth/orig cells in each cluster.
-#         synth_cells_per_comm <- collections.Counter(self.synth_communities_)
-#         orig_cells_per_comm <- collections.Counter(self.communities_)
+#         synth_cells_per_comm <- collections.Counter(synth_communities_)
+#         orig_cells_per_comm <- collections.Counter(communities_)
 #         community_IDs <- orig_cells_per_comm.keys()
 #         community_scores <- {i: numeric(synth_cells_per_comm[i]) /
 #                             (synth_cells_per_comm[i] + orig_cells_per_comm[i])
 #                             for i in community_IDs}
-#         scores <- np.array([community_scores[i] for i in self.communities_])
+#         scores <- np.array([community_scores[i] for i in communities_])
 # 
 #         community_p_values <- {i: hypergeom.cdf(synth_cells_per_comm[i], aug_counts.shape[0],
-#                                             self._synthetics.shape[0],
+#                                             synthetics_temp.shape[0],
 #                                             synth_cells_per_comm[i] + orig_cells_per_comm[i])
 #                               for i in community_IDs}
-#         p_values <- np.array([community_p_values[i] for i in self.communities_])
+#         p_values <- np.array([community_p_values[i] for i in communities_])
 # 
 #         if min_ID < 0:
-#             scores[self.communities_ == -1] <- np.nan
-#             p_values[self.communities_ == -1] <- np.nan
+#             scores[communities_ == -1] <- np.nan
+#             p_values[communities_ == -1] <- np.nan
 # 
 #         return scores, p_values
 # 
@@ -509,7 +479,7 @@ BoostClassifier <-setRefClass(
 # 
 #         lib1 <- np.sum(cell1)
 #         lib2 <- np.sum(cell2)
-#         new_lib_size <- int(self.new_lib_as([lib1, lib2]))
+#         new_lib_size <- int(new_lib_as([lib1, lib2]))
 #         mol_ind <- np.random.permutation(int(lib1 + lib2))[:new_lib_size]
 #         mol_ind += 1
 #         bins <- np.append(np.zeros((1)), np.cumsum(new_cell))
@@ -523,23 +493,23 @@ BoostClassifier <-setRefClass(
 #         Sets .parents_
 #         """
 #         # Number of synthetic doublets to add
-#         num_synths <- int(self.boost_rate * self._num_cells)
-#         synthetic <- np.zeros((num_synths, self._num_genes))
+#         num_synths <- int(boost_rate * num_cells)
+#         synthetic <- np.zeros((num_synths, num_genes))
 #         parents <- []
 # 
-#         choices <- np.random.choice(self._num_cells, size=(num_synths, 2), replace=self.replace)
+#         choices <- np.random.choice(num_cells, size=(num_synths, 2), replace=replace)
 #         for i, parent_pair in enumerate(choices):
 #             row1 <- parent_pair[0]
 #             row2 <- parent_pair[1]
-#             if self.new_lib_as is not NULL:
-#                 new_row <- self._downsampleCellPair(self._raw_counts[row1], self._raw_counts[row2])
+#             if new_lib_as is not NULL:
+#                 new_row <- _downsampleCellPair(raw_counts_temp[row1], raw_counts_temp[row2])
 #             else:
-#                 new_row <- self._raw_counts[row1] + self._raw_counts[row2]
+#                 new_row <- raw_counts_temp[row1] + raw_counts_temp[row2]
 #             synthetic[i] <- new_row
 #             parents.append([row1, row2])
 # 
-#         self._raw_synthetics <- synthetic
-#         self.parents_ <- parents
+#         rawsynthetics_temp <<- synthetic
+#         parents_ <- parents
 
 
 # import collections
