@@ -1,28 +1,43 @@
 # DoubletDetection
 
-DoubletDetection is a Python3 package to detect doublets (technical errors) in single-cell RNA-seq count matrices.
+DoubletDetection is an R implementation of a package to detect doublets (technical errors) in single-cell RNA-seq count matrices.
 
-To install DoubletDetection:
+## Installation
+
+To install DoubletDetection in R:
 
 ```
-git clone https://github.com/JonathanShor/DoubletDetection.git
-cd DoubletDetection
-pip3 install --upgrade .
+if(!require(devtools)){
+  install.packages("devtools") # If not already installed
+}
+devtools::install_github("TomKellyGenetics/DoubletDetection", ref = "r-implementation")
 ```
+
+## Running
 
 To run basic doublet classification:
 
 ```
-import doubletdetection
-clf = doubletdetection.BoostClassifier()
+library("DoubletDetection")
+clf <- BoostClassifier$new()
 # raw_counts is a cells by genes count matrix
-labels = clf.fit(raw_counts).predict()
+labels = clf$fit(raw_counts)$predict()
 ```
 
-`raw_counts` is a scRNA-seq count matrix (cells by genes), and is array-like. `labels` is a binary 1-dimensional numpy ndarray with the value 1 representing a 
+`raw_counts` is a scRNA-seq count matrix (cells by genes) or data.frame. `labels` is a binary numerical vector with the value 1 representing a 
 detected doublet.
 
-See our [jupyter notebook](https://nbviewer.jupyter.org/github/JonathanShor/DoubletDetection/blob/master/docs/PBMC_8k_vignette.ipynb) for an example on 8k PBMCs from 10x.
+# Usage
+
+## R Version
+
+These functions and methods (for the Reference Class) have been documented and can be accessed in the R help system. A [vignette][https://rawgit.com/TomKellyGenetics/DoubletDetection/r-implementation/vignettes/PBMC_8k_vignette.html] will be prepared using Rmarkdown in due course.
+
+## Python Version
+
+For the Python implementation, see the original repository: https://github.com/JonathanShor/DoubletDetection
+
+See their [jupyter notebook](https://nbviewer.jupyter.org/github/JonathanShor/DoubletDetection/blob/master/docs/PBMC_8k_vignette.ipynb) for an example on 8k PBMCs from 10x.
 
 ## Obtaining data
 Data can be downloaded from the [10x website](https://support.10xgenomics.com/single-cell/datasets).
