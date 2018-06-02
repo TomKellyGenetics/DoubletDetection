@@ -422,7 +422,7 @@ BoostClassifier <- setRefClass(
       fullcommunities <- Rphenograph(reduced_counts, k = n_components, prune = phenograph_parameters$prune)
       min_ID <- min(sizes(fullcommunities[[2]]))
       communities_ <- membership(fullcommunities[[2]])[1:num_cells]
-      synth_communities_ <- membership(fullcommunities[[2]])[num_cells:length(membership(fullcommunities[[2]])]
+      synth_communities_ <- membership(fullcommunities[[2]])[num_cells:length(membership(fullcommunities[[2]]))]
       community_sizes <- sizes(fullcommunities[[2]])
       
       for(ii in 1:length(community_sizes)){
