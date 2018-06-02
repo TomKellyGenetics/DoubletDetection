@@ -53,8 +53,20 @@ See their [jupyter notebook](https://nbviewer.jupyter.org/github/JonathanShor/Do
 Data can be downloaded from the [10x website](https://support.10xgenomics.com/single-cell/datasets).
 
 
-## Citations
+# Citations
 
-bioRxiv submission is in the works.
+## R version
 
-This project is licensed under the terms of the MIT license.
+Please cite the R implementation as an R package using `citation(DoubletDetection)`.
+
+>Adam Gayoso, S. Thomas Kelly, and Jonathon Shor (2018). DoubletDetection: a package to detect
+doublets (technical errors) in single-cell RNA-seq count matrices. R package version 0.1.0.9001
+https://github.com/TomKellyGenetics/DoubletDetection"
+
+## Python version
+
+Please acknowledge the original contributors when using the R implementation.
+
+bioRxiv submission is in progress. Please refer to the [Python Repository][ https://github.com/JonathanShor/DoubletDetection] for more details.
+
+This project is licensed under the terms of the MIT license (in accordance with the license of the original repository).
