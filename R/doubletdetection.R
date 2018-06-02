@@ -53,40 +53,40 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
   #         ndarray: Raw count matrix.
   #         ndarray: Barcodes
   #         ndarray: Gene names
-    if (!file.exists(normalizePath((file)))) 
-      stop("Could not find the path of file: '", file, 
-           "'. Please double-check if the directory exists.\n")
-    if (!dir.exists(normalizePath(paste(dirname(file))))) 
-      stop("Could not find the pipestance output directory: '", 
-           normalizePath(paste(dirname(file))), "'. Please double-check if the directory exists.\n")
-    h5_path <- file.path(normalizePath(paste(dirname(file))), ifelse(barcode_filtered, 
-                                                         "filtered_gene_bc_matrices_h5.h5", "raw_gene_bc_matrices_h5.h5"))
-    if (!file.exists(h5_path)) {
-      stop(sprintf("Could not find matrix H5: %s\n", h5_path))
-    }
-    file.h5 <- H5File$new(h5_path, mode = "r")
-    #names(file.h5)
-    #file.h5$ls(recursive=TRUE)
-    
-    # gene_ids <- file.h5[[paste0(genome, "/genes")]][]
-    #gene_names <- eval(parse(text = paste0("file.h5[[\"", genome, "\"]][[\"gene_names\"]]")))[]
-    #barcodes <- eval(parse(text = paste0("file.h5[[\"", genome, "\"]]")))[["barcodes"]]
-    gene_names <- file.h5[[paste0(genome, "/gene_names")]][]
-    barcodes <- file.h5[[paste0(genome, "/barcodes")]][]
-    data <- file.h5[[paste0(genome, "/data")]][]
-    indices <- file.h5[[paste0(genome, "/indices")]][]
-    indptr <- file.h5[[paste0(genome, "/indptr")]][]
-    shape <- file.h5[[paste0(genome, "/shape")]][]
-    #h5attr_names(file.h5[[paste0(genome, "/shape")]])
-    matrix <- sparseMatrix(i = indices+1, p = indptr, x = data, dims = shape)
-    dense_matrix <- matrix(matrix, nrow = shape[1], ncol = shape[2])
-    
-    rownames(dense_matrix) <- gene_names
-    colnames(dense_matrix) <- barcodes
-      
-    return(dense_matrix)
+  if (!file.exists(normalizePath((file)))) 
+    stop("Could not find the path of file: '", file, 
+         "'. Please double-check if the directory exists.\n")
+  if (!dir.exists(normalizePath(paste(dirname(file))))) 
+    stop("Could not find the pipestance output directory: '", 
+         normalizePath(paste(dirname(file))), "'. Please double-check if the directory exists.\n")
+  h5_path <- file.path(normalizePath(paste(dirname(file))), ifelse(barcode_filtered, 
+                                                                   "filtered_gene_bc_matrices_h5.h5", "raw_gene_bc_matrices_h5.h5"))
+  if (!file.exists(h5_path)) {
+    stop(sprintf("Could not find matrix H5: %s\n", h5_path))
   }
+  file.h5 <- H5File$new(h5_path, mode = "r")
+  #names(file.h5)
+  #file.h5$ls(recursive=TRUE)
   
+  # gene_ids <- file.h5[[paste0(genome, "/genes")]][]
+  #gene_names <- eval(parse(text = paste0("file.h5[[\"", genome, "\"]][[\"gene_names\"]]")))[]
+  #barcodes <- eval(parse(text = paste0("file.h5[[\"", genome, "\"]]")))[["barcodes"]]
+  gene_names <- file.h5[[paste0(genome, "/gene_names")]][]
+  barcodes <- file.h5[[paste0(genome, "/barcodes")]][]
+  data <- file.h5[[paste0(genome, "/data")]][]
+  indices <- file.h5[[paste0(genome, "/indices")]][]
+  indptr <- file.h5[[paste0(genome, "/indptr")]][]
+  shape <- file.h5[[paste0(genome, "/shape")]][]
+  #h5attr_names(file.h5[[paste0(genome, "/shape")]])
+  matrix <- sparseMatrix(i = indices+1, p = indptr, x = data, dims = shape)
+  dense_matrix <- matrix(matrix, nrow = shape[1], ncol = shape[2])
+  
+  rownames(dense_matrix) <- gene_names
+  colnames(dense_matrix) <- barcodes
+  
+  return(dense_matrix)
+}
+
 ##' @rdname doublet_detection
 ##' 
 ##' @param file character: path to mtx file
@@ -266,17 +266,17 @@ BoostClassifier <- setRefClass(
       replace <<- replace
       n_iters <<- n_iters
       normalizer <<- normalizer
-
+      
       if(n_components == 30 & n_top_var_genes > 0){
         # If user did not change n_components, silently cap it by n_top_var_genes if needed
         n_components <<- min(n_components, n_top_var_genes)
       } else {
         n_components <<- n_components
       }
-         
+      
       # Floor negative n_top_var_genes by 0
       n_top_var_genes <<- as.integer(max(0, n_top_var_genes))
-
+      
       if(!("prune" %in% names(phenograph_parameters))){
         phenograph_parameters$prune <<- TRUE
       }
@@ -284,7 +284,7 @@ BoostClassifier <- setRefClass(
       if(n_iters == 1 & phenograph_parameters$prune == TRUE){
         warning("Using phenograph parameter prune=FALSE is strongly recommended when \n running only one iteration. Otherwise, expect many NaN labels.")
       }
-  
+      
       if(replace == FALSE & boost_rate > 0.5){
         warning("boost_rate is trimmed to 0.5 when replace=FALSE. \n Set replace=TRUE to use greater boost rates.")
         boost_rate <<- 0.5
@@ -324,51 +324,51 @@ BoostClassifier <- setRefClass(
       }
       
       if(n_top_var_genes > 0){
-          gene_variances <- apply(raw_counts, 1, var)
-          top_var_indexes <- sort(gene_variances)
-          if(n_top_var_genes < nrow(raw_counts)){
-            top_var_genes_ <- top_var_indexes[1:n_top_var_genes]
-            #filter to top genes
-            raw_counts <- raw_counts[, top_var_genes_]
-          } else {
-            warning("n_top_var_genes exceeds total genes \n processing full dataset")
-            top_var_genes_ <- top_var_indexes[1:min(n_top_var_genes, nrow(raw_counts))]
-          }
+        gene_variances <- apply(raw_counts, 1, var)
+        top_var_indexes <- sort(gene_variances)
+        if(n_top_var_genes < nrow(raw_counts)){
+          top_var_genes_ <- top_var_indexes[1:n_top_var_genes]
+          #filter to top genes
+          raw_counts <- raw_counts[, top_var_genes_]
+        } else {
+          warning("n_top_var_genes exceeds total genes \n processing full dataset")
+          top_var_genes_ <- top_var_indexes[1:min(n_top_var_genes, nrow(raw_counts))]
+        }
       }
-    #initialise self object
-    #self <- list()
-    raw_counts <<- raw_counts
-    num_genes <<- nrow(raw_counts)
-    num_cells <<- ncol(raw_counts)
-
-    all_scores_ <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
-    all_p_values_ <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
-    all_communities <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
-    
-    all_parents <<- list()
-    all_synth_communities <- matrix(rep(0, n_iters*as.integer(boost_rate * num_cells)), n_iters,as.integer(boost_rate * num_cells))
-    
-    for(i in 1:n_iters){
-      print(paste0("Iteration ", i, "/", n_iters))
-      all_scores_[i]  <<- one_fit()
-      all_p_values_[i] <<- one_fit()
-      all_communities[i] <<- communities_
-      all_parents <<- c(all_parents, parents_)
-      all_synth_communities[i] <<- synth_communities_
-    }
-    # Release unneeded large data vars
-    rm(raw_counts, norm_counts, rawsynthetics, synthetics)
-    #attr(self, "raw_counts") <- NULL
-    #attr(self, "norm_counts") <- NULL
-    #attr(self, "rawsynthetics") <- NULL
-    #attr(self, "synthetics") <- NULL
-    
-    communities_ <<- all_communities
-    parents_ <<- all_parents
-    synth_communities_ <<- all_synth_communities
-    
-    self <- list(all_scores_, all_p_values_, communities_, top_var_genes, parents, synth_communities_)
-    #return(self)
+      #initialise self object
+      #self <- list()
+      raw_counts <<- raw_counts
+      num_genes <<- nrow(raw_counts)
+      num_cells <<- ncol(raw_counts)
+      
+      all_scores_ <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
+      all_p_values_ <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
+      all_communities <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
+      
+      all_parents <<- list()
+      all_synth_communities <- matrix(rep(0, n_iters*as.integer(boost_rate * num_cells)), n_iters,as.integer(boost_rate * num_cells))
+      
+      for(i in 1:n_iters){
+        print(paste0("Iteration ", i, "/", n_iters))
+        all_scores_[i]  <<- one_fit()
+        all_p_values_[i] <<- one_fit()
+        all_communities[i] <<- communities_
+        all_parents <<- c(all_parents, parents_)
+        all_synth_communities[i] <<- synth_communities_
+      }
+      # Release unneeded large data vars
+      rm(raw_counts, norm_counts, rawsynthetics, synthetics)
+      #attr(self, "raw_counts") <- NULL
+      #attr(self, "norm_counts") <- NULL
+      #attr(self, "rawsynthetics") <- NULL
+      #attr(self, "synthetics") <- NULL
+      
+      communities_ <<- all_communities
+      parents_ <<- all_parents
+      synth_communities_ <<- all_synth_communities
+      
+      self <- list(all_scores_, all_p_values_, communities_, top_var_genes, parents, synth_communities_)
+      #return(self)
     },
     predict = function(p_thresh = 0.99, voter_thresh = 0.9){ #Produce doublet calls from fitted classifier
       #         Args:
@@ -417,7 +417,7 @@ BoostClassifier <- setRefClass(
       # Get phenograph results
       pca <- prcomp(aug_counts, rank = n_components, center = TRUE, scale. = TRUE)$x
       reduced_counts <- pca #apply(pca, 2, normalizer) #already normalized
-        
+      
       print("Clustering augmented data set with Phenograph...\n")
       fullcommunities <- Rphenograph(reduced_counts, k = n_components, prune = phenograph_parameters$prune)
       min_ID <- min(sizes(fullcommunities[[2]]))
@@ -451,86 +451,86 @@ BoostClassifier <- setRefClass(
       # 
       #         return scores, p_values
     }
+      )
   )
-)
-
-##' @example 
-# 
-# class BoostClassifier:
-#     """Classifier for doublets in single-cell RNA-seq data.
-#
-# 
-#     def __init__(self, boost_rate=0.25, n_components=30, n_top_var_genes=10000, new_lib_as=NULL,
-#                  replace=FALSE, phenograph_parameters={'prune': TRUE}, n_iters=25,
-#                  normalizer=normalize_counts):
-# 
-
-# 
-#     def predict(self, p_thresh=0.99, voter_thresh=0.9):
-#         """Produce doublet calls from fitted classifier
-
-# 
-#     def one_fit(self):
-#         print("\nCreating downsampled doublets...")
-#         createDoublets()
-# 
-
-# 
-#     def _downsampleCellPair(self, cell1, cell2):
-#         """Downsample the sum of two cells' gene expression profiles.
-# 
-#         Args:
-#             cell1 (ndarray, ndim=1): Gene count vector.
-#             cell2 (ndarray, ndim=1): Gene count vector.
-# 
-#         Returns:
-#             ndarray, ndim=1: Downsampled gene count vector.
-#         """
-#         new_cell <- cell1 + cell2
-# 
-#         lib1 <- np.sum(cell1)
-#         lib2 <- np.sum(cell2)
-#         new_lib_size <- int(new_lib_as([lib1, lib2]))
-#         mol_ind <- np.random.permutation(int(lib1 + lib2))[:new_lib_size]
-#         mol_ind += 1
-#         bins <- np.append(np.zeros((1)), np.cumsum(new_cell))
-#         new_cell <- np.histogram(mol_ind, bins)[0]
-# 
-#         return new_cell
-# 
-#     def createDoublets(self):
-#         """Create synthetic doublets.
-# 
-#         Sets .parents_
-#         """
-#         # Number of synthetic doublets to add
-#         num_synths <- int(boost_rate * num_cells)
-#         synthetic <- np.zeros((num_synths, num_genes))
-#         parents <- []
-# 
-#         choices <- np.random.choice(num_cells, size=(num_synths, 2), replace=replace)
-#         for i, parent_pair in enumerate(choices):
-#             row1 <- parent_pair[0]
-#             row2 <- parent_pair[1]
-#             if new_lib_as is not NULL:
-#                 new_row <- _downsampleCellPair(raw_counts_temp[row1], raw_counts_temp[row2])
-#             else:
-#                 new_row <- raw_counts_temp[row1] + raw_counts_temp[row2]
-#             synthetic[i] <- new_row
-#             parents.append([row1, row2])
-# 
-#         rawsynthetics_temp <<- synthetic
-#         parents_ <- parents
-
-
-# import collections
-# import warnings
-# 
-# import numpy as np
-# import phenograph
-# from sklearn.decomposition import PCA
-# from sklearn.utils import check_array
-# from scipy.io import mmread
-# from scipy.stats import hypergeom
-# import scipy.sparse as sp_sparse
-# import tables
+  
+  ##' @example 
+  # 
+  # class BoostClassifier:
+  #     """Classifier for doublets in single-cell RNA-seq data.
+  #
+  # 
+  #     def __init__(self, boost_rate=0.25, n_components=30, n_top_var_genes=10000, new_lib_as=NULL,
+  #                  replace=FALSE, phenograph_parameters={'prune': TRUE}, n_iters=25,
+  #                  normalizer=normalize_counts):
+  # 
+  
+  # 
+  #     def predict(self, p_thresh=0.99, voter_thresh=0.9):
+  #         """Produce doublet calls from fitted classifier
+  
+  # 
+  #     def one_fit(self):
+  #         print("\nCreating downsampled doublets...")
+  #         createDoublets()
+  # 
+  
+  # 
+  #     def _downsampleCellPair(self, cell1, cell2):
+  #         """Downsample the sum of two cells' gene expression profiles.
+  # 
+  #         Args:
+  #             cell1 (ndarray, ndim=1): Gene count vector.
+  #             cell2 (ndarray, ndim=1): Gene count vector.
+  # 
+  #         Returns:
+  #             ndarray, ndim=1: Downsampled gene count vector.
+  #         """
+  #         new_cell <- cell1 + cell2
+  # 
+  #         lib1 <- np.sum(cell1)
+  #         lib2 <- np.sum(cell2)
+  #         new_lib_size <- int(new_lib_as([lib1, lib2]))
+  #         mol_ind <- np.random.permutation(int(lib1 + lib2))[:new_lib_size]
+  #         mol_ind += 1
+  #         bins <- np.append(np.zeros((1)), np.cumsum(new_cell))
+  #         new_cell <- np.histogram(mol_ind, bins)[0]
+  # 
+  #         return new_cell
+  # 
+  #     def createDoublets(self):
+  #         """Create synthetic doublets.
+  # 
+  #         Sets .parents_
+  #         """
+  #         # Number of synthetic doublets to add
+  #         num_synths <- int(boost_rate * num_cells)
+  #         synthetic <- np.zeros((num_synths, num_genes))
+  #         parents <- []
+  # 
+  #         choices <- np.random.choice(num_cells, size=(num_synths, 2), replace=replace)
+  #         for i, parent_pair in enumerate(choices):
+  #             row1 <- parent_pair[0]
+  #             row2 <- parent_pair[1]
+  #             if new_lib_as is not NULL:
+  #                 new_row <- _downsampleCellPair(raw_counts_temp[row1], raw_counts_temp[row2])
+  #             else:
+  #                 new_row <- raw_counts_temp[row1] + raw_counts_temp[row2]
+  #             synthetic[i] <- new_row
+  #             parents.append([row1, row2])
+  # 
+  #         rawsynthetics_temp <<- synthetic
+  #         parents_ <- parents
+  
+  
+  # import collections
+  # import warnings
+  # 
+  # import numpy as np
+  # import phenograph
+  # from sklearn.decomposition import PCA
+  # from sklearn.utils import check_array
+  # from scipy.io import mmread
+  # from scipy.stats import hypergeom
+  # import scipy.sparse as sp_sparse
+  # import tables
