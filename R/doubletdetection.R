@@ -175,7 +175,9 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' Classifier for doublets in single-cell RNA-seq data
 ##' 
 ##' @param raw_counts (array-like): Count matrix, oriented cells by genes.
-##' @import Matrix checkmate assertthat
+##' @import Matrix stats 
+##' @import Rphenograph
+##' @import checkmate assertthat
 ##' 
 ##' @export
 ##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
@@ -348,8 +350,8 @@ BoostClassifier <- setRefClass(
     
     for(i in 1:n_iters){
       print(paste0("Iteration ", i, "/", n_iters))
-      all_scores_[i]  <<- one_fit_temp()
-      all_p_values_[i] <<- one_fit_temp()
+      all_scores_[i]  <<- one_fit()
+      all_p_values_[i] <<- one_fit()
       all_communities[i] <<- communities_
       all_parents <<- c(all_parents, parents_)
       all_synth_communities[i] <<- synth_communities_
@@ -400,10 +402,54 @@ BoostClassifier <- setRefClass(
       }
       return(labels_)
     },
-    printInput = function(input)
-    {
-      if(missing(input)) stop("You must provide some input.")
-      print(input)
+    one_fit <- function(){
+      print("\nCreating downsampled doublets...")
+      createDoublets()
+      
+      # Normalize combined augmented set
+      print("Normalizing...")
+      
+      aug_counts <- normalizer(rbind(raw_counts_temp, rawsynthetics_temp))
+      norm_counts <<- aug_counts[1:num_cells]
+      synthetics <<- aug_counts[num_cells:length(aug_counts)]
+      
+      print("Running PCA...")
+      # Get phenograph results
+      pca <- prcomp(rank = n_components)$x
+      reduced_counts <- apply(pca, 2, function(x) (x - mean(aug_counts)) / sd(aug_counts))
+        
+      print("Clustering augmented data set with Phenograph...\n")
+      fullcommunities <- Rphenograph(reduced_counts)# parameter k defaults to 30, pass **phenograph_parameters
+      min_ID <- min(sizes(fullcommunities[[2]]))
+      communities_ <- membership(fullcommunities[[2]])[1:num_cells]
+      synth_communities_ <- membership(fullcommunities[[2]])[num_cells:length(membership(fullcommunities[[2]])]
+      community_sizes <- sizes(fullcommunities[[2]])
+      
+      for(ii in 1:length(community_sizes)){
+        print(paste0("Found community ", names(community_sizes)[ii], " with size: ", community_sizes[ii]))
+      }
+      
+      # Count number of fake doublets in each community and assign score
+      # Number of synth/orig cells in each cluster.
+      synth_cells_per_comm <- collections.Counter(synth_communities_)
+      #         orig_cells_per_comm <- collections.Counter(communities_)
+      #         community_IDs <- orig_cells_per_comm.keys()
+      #         community_scores <- {i: numeric(synth_cells_per_comm[i]) /
+      #                             (synth_cells_per_comm[i] + orig_cells_per_comm[i])
+      #                             for i in community_IDs}
+      #         scores <- np.array([community_scores[i] for i in communities_])
+      # 
+      #         community_p_values <- {i: hypergeom.cdf(synth_cells_per_comm[i], aug_counts.shape[0],
+      #                                             synthetics_temp.shape[0],
+      #                                             synth_cells_per_comm[i] + orig_cells_per_comm[i])
+      #                               for i in community_IDs}
+      #         p_values <- np.array([community_p_values[i] for i in communities_])
+      # 
+      #         if min_ID < 0:
+      #             scores[communities_ == -1] <- np.nan
+      #             p_values[communities_ == -1] <- np.nan
+      # 
+      #         return scores, p_values
     }
   )
 )
@@ -424,52 +470,11 @@ BoostClassifier <- setRefClass(
 #         """Produce doublet calls from fitted classifier
 
 # 
-#     def one_fit_temp(self):
+#     def one_fit(self):
 #         print("\nCreating downsampled doublets...")
-#         _createDoublets()
+#         createDoublets()
 # 
-#         # Normalize combined augmented set
-#         print("Normalizing...")
-#         aug_counts <- normalizer(np.append(raw_counts_temp, rawsynthetics_temp, axis=0))
-#         norm_counts <<- aug_counts[:num_cells]
-#         synthetics <<- aug_counts[num_cells:]
-# 
-#         print("Running PCA...")
-#         # Get phenograph results
-#         pca <- PCA(n_components=n_components)
-#         reduced_counts <- pca.fit_transform(aug_counts)
-#         print("Clustering augmented data set with Phenograph...\n")
-#         fullcommunities, _, _ <- phenograph.cluster(reduced_counts, **phenograph_parameters)
-#         min_ID <- min(fullcommunities)
-#         communities_ <- fullcommunities[:num_cells]
-#         synth_communities_ <- fullcommunities[num_cells:]
-#         community_sizes <- [np.count_nonzero(fullcommunities == i)
-#                            for i in np.unique(fullcommunities)]
-#         print("Found communities [{0}, ... {2}], with sizes: {1}\n".format(min(fullcommunities),
-#                                                                            community_sizes,
-#                                                                            max(fullcommunities)))
-# 
-#         # Count number of fake doublets in each community and assign score
-#         # Number of synth/orig cells in each cluster.
-#         synth_cells_per_comm <- collections.Counter(synth_communities_)
-#         orig_cells_per_comm <- collections.Counter(communities_)
-#         community_IDs <- orig_cells_per_comm.keys()
-#         community_scores <- {i: numeric(synth_cells_per_comm[i]) /
-#                             (synth_cells_per_comm[i] + orig_cells_per_comm[i])
-#                             for i in community_IDs}
-#         scores <- np.array([community_scores[i] for i in communities_])
-# 
-#         community_p_values <- {i: hypergeom.cdf(synth_cells_per_comm[i], aug_counts.shape[0],
-#                                             synthetics_temp.shape[0],
-#                                             synth_cells_per_comm[i] + orig_cells_per_comm[i])
-#                               for i in community_IDs}
-#         p_values <- np.array([community_p_values[i] for i in communities_])
-# 
-#         if min_ID < 0:
-#             scores[communities_ == -1] <- np.nan
-#             p_values[communities_ == -1] <- np.nan
-# 
-#         return scores, p_values
+
 # 
 #     def _downsampleCellPair(self, cell1, cell2):
 #         """Downsample the sum of two cells' gene expression profiles.
@@ -493,7 +498,7 @@ BoostClassifier <- setRefClass(
 # 
 #         return new_cell
 # 
-#     def _createDoublets(self):
+#     def createDoublets(self):
 #         """Create synthetic doublets.
 # 
 #         Sets .parents_

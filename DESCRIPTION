@@ -13,4 +13,6 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
+Remotes:
+    JinmiaoChenLab/Rphenograph
 VignetteBuilder: knitr
