@@ -1,0 +1,109 @@
+---
+title: "Doublet Detection on 8k PBMCs from 10x Genomics"
+author: "Tom Kelly and Jonathon Shor"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Install packages
+
+### Install package:
+
+```{r}
+if(!require(devtools)){
+  install.packages("devtools") # If not already installed
+}
+devtools::install_github("TomKellyGenetics/DoubletDetection", ref = "r-implementation")
+```
+
+### Install dependancies:
+
+```{r, eval = FALSE}
+devtools::install_github("JinmiaoChenLab/Rphenograph")
+devtools::install_github("TomKellyGenetics/Rphenograph")
+install.packages("hdf5r")
+install.packages("Matrix")
+```
+
+### Install hdf5 (if needed)
+
+OS X (using Homebrew)	`brew install hdf5`
+
+Debian-based systems (including Ubuntu)	`sudo apt-get install libhdf5-dev`
+
+Systems supporting yum and RPMs	`sudo yum install hdf5-devel`
+
+HDF5 1.8.14 has been pre-compiled for Windows and is available at https://github.com/mannau/h5-libwin 
+
+### load package (and dependancies)
+
+```{r}
+library("DoubletDetection")
+```
+
+## Download Data from 10X Genomics
+
+These commands will be called from R in Linus and Mac systems. The files will need to be downloaded from the given url (into the working directory) in Windows.
+
+```{r}
+#download files
+system("wget http://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_filtered_gene_bc_matrices.tar.gz")
+#extract compressed files
+system("tar -xvzf pbmc8k_filtered_gene_bc_matrices.tar.gz")
+```
+
+## Load Counts Matrix
+
+```{r}
+matrix_path <- 'filtered_gene_bc_matrices/GRCh38/matrix.mtx'
+raw_counts <- DoubletDetection::load_mtx(matrix_path)
+# Remove columns with all 0s
+non_zero_genes <- apply(raw_counts, 1, function(x) sum(x) != 0)
+raw_counts <- raw_counts[, non_zero_genes]
+```
+
+## Run Doublet Detection
+
+Right now, phenograph is a bit talkative, so we suppress the output to avoid lots of text:
+
+```{r, include = FALSE}
+#initialise BoostClassifier Reference Class (with analysis parameters)
+clf <- DoubletDetection::BoostClassifier$new(n_iters=50)
+ 
+#run doublet prediction
+start <- Sys.time()
+doublets <- clf$fit(raw_counts)$predict()
+end <- Sys.time()
+```
+
+```{r}
+print(paste("Time elapsed", end-start,"seconds,", (end-start) / clf.n_iters, clf.n_iters), "sec/iteration, for", n_inters, "iterations")
+```
+
+## Visualize Results
+
+### Convergence of Doublet Calls
+
+```{r, eval = FALSE}
+f <- DoubletDetection::plot$convergence(clf, save='convergence_test.pdf', show=TRUE)
+```
+
+
+### Doublets on tSNE map
+
+```{r, eval = FALSE}
+f2_tsne_coords <- DoubletDetection::plot$tsne(raw_counts, doublets, save='tsne_test.pdf', show=True)
+```
+
+
