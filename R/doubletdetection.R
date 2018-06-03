@@ -175,9 +175,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' Classifier for doublets in single-cell RNA-seq data
 ##' 
 ##' @param raw_counts (array-like): Count matrix, oriented cells by genes.
-##' @import Matrix stats 
-##' @import Rphenograph
-##' @import checkmate assertthat
+##' @import Matrix stats Rphenograph
 ##' 
 ##' @export
 ##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
@@ -419,7 +417,7 @@ BoostClassifier <- setRefClass(
       }
       return(labels_)
     },
-    one_fit <- function(){
+    one_fit = function(){
       print("\nCreating downsampled doublets...")
       createDoublets()
       
@@ -464,7 +462,7 @@ BoostClassifier <- setRefClass(
       }
       return(list(scores, p_values))
     },
-  downsampleCellPair <- function(cell1, cell2){ #Downsample the sum of two cells' gene expression profiles.
+  downsampleCellPair = function(cell1, cell2){ #Downsample the sum of two cells' gene expression profiles.
     #         Args:
     #             cell1 (ndarray, ndim=1): Gene count vector.
     #             cell2 (ndarray, ndim=1): Gene count vector.
@@ -488,7 +486,7 @@ BoostClassifier <- setRefClass(
     
     return(new_cell)
   },
-  createDoublets <- function(){ #Create synthetic doublets.
+  createDoublets = function(){ #Create synthetic doublets.
     #         Sets .parents_
     
     # Number of synthetic doublets to add
