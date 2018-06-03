@@ -9,3 +9,6 @@ load_mtx(file)
 \arguments{
 \item{file}{character: path to mtx file}
 }
+\description{
+Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
+}

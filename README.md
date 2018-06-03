@@ -1,14 +1,14 @@
 # Notice
 
-**Do not attempt to run code from this package**
+**This repository is still in development**
 
-**This repository is still in progress**
+The testing of R implementation of functions provided in the Python version is ongoing. This package is not fully documented yet. Please share any problems you encounter in the documentation or functionality of the code as an issue on GitHub. Thank you for your patience.
 
-The R implementation of functions provided in the Python version is ongoing. This package is not functional yet.
-
-Contributions to the R implementation are welcome.
+Contributions to the R implementation via pull request are welcome.
 
 # DoubletDetection
+
+## Version 2.1.0
 
 DoubletDetection is an R implementation of a package to detect doublets (technical errors) in single-cell RNA-seq count matrices.
 
