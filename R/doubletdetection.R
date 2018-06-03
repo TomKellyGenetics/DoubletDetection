@@ -172,7 +172,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 }
 
 ##' @rdname doublet_detection
-##' Classifier for doublets in single-cell RNA-seq data
+##' @title Classifier for doublets in single-cell RNA-seq data
 ##' 
 ##' @param raw_counts (array-like): Count matrix, oriented cells by genes.
 ##' @import Matrix stats Rphenograph
@@ -425,8 +425,8 @@ BoostClassifier <- setRefClass(
       print("Normalizing...")
       
       aug_counts <- normalizer(rbind(raw_counts, rawsynthetics_temp)) #remove _temp for internal variables
-      norm_counts <<- aug_counts[1:num_cells]
-      synthetics <<- aug_counts[num_cells:length(aug_counts)]
+      norm_counts <- aug_counts[1:num_cells]
+      synthetics <- aug_counts[num_cells:length(aug_counts)]
       
       print("Running PCA...")
       # Get phenograph results
@@ -510,8 +510,8 @@ BoostClassifier <- setRefClass(
       synthetic[i] <- new_row
       parents[[i]] <- c(row1, row2)
     }
-    rawsynthetics_temp <<- synthetic
-    parents_ <<- parents
+    rawsynthetics <- synthetic
+    parents_ <- parents
   }
   )
 )
