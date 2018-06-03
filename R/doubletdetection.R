@@ -138,6 +138,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @field n_iters (integer optional): Number of fit operations from which to collect p-values. Defualt value is 25. normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
 ##' @field normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
 ##' 
+##' @param raw_counts (array-like): Count matrix, oriented cells by genes.
 ##' @param p_thresh (numeric, optional): hypergeometric test p-value threshold that determines per iteration doublet calls
 ##' @param voter_thresh (numeric, optional): fraction of iterations a cell must be called a doublet
 ##' @param cell1,cell2 (vector, numeric): Gene count vectors.
@@ -263,8 +264,6 @@ BoostClassifier <- setRefClass(
     },
     fit = function(raw_counts){
       "Fits the classifier on raw_counts."
-      ##' @param raw_counts (array-like): Count matrix, oriented cells by genes.
-      
       #         Args:
       #             raw_counts (array-like): Count matrix, oriented cells by genes.
       # 
