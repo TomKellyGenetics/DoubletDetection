@@ -263,10 +263,8 @@ BoostClassifier <- setRefClass(
       #             generated if n_top_var_genes <= 0.
       #         voting_average_ (ndarray): Fraction of iterations each cell is called a
       #             doublet.
-      #code
       #This method is called when you create an instance of the class.
       boost_rate <<- boost_rate
-      new_lib_as <<- new_lib_as
       replace <<- replace
       n_iters <<- n_iters
       normalizer <<- normalizer
@@ -281,6 +279,22 @@ BoostClassifier <- setRefClass(
       # Floor negative n_top_var_genes by 0
       n_top_var_genes <<- as.integer(max(0, n_top_var_genes))
       
+      #check new_lib_as function
+      if(is.function(new_lib_as)){
+        new_lib_as <<- new_lib_as
+        print(paste("function", deparse(substitute(new_lib_as)), "accepted as new_lib_as"))
+      } else if(is.null(new_lib_as) || new_lib_as == TRUE){
+        new_lib_as <- sum
+        print(paste("function", 'sum', "accepted as new_lib_as"))
+      } else if(new_lib_as == FALSE){
+        new_lib_as = max
+        print(paste("function", "max", "accepted as new_lib_as"))
+      } else {
+        stop("no valid new_lib_as input \n please enter NULL, TRUE, FALSE, or a valid function")
+      }
+      new_lib_as <<- new_lib_as
+      
+      #check prune argument defined (to pass to phenograph)
       if(!("prune" %in% names(phenograph_parameters))){
         phenograph_parameters$prune <<- TRUE
       }
@@ -465,20 +479,6 @@ BoostClassifier <- setRefClass(
     lib1 <- sum(cell1)
     lib2 <- sum(cell2)
     
-    #check new_lib_as function
-    if(is.function(new_lib_as)){
-      new_lib_as <<- new_lib_as
-      print(paste("function", deparse(substitute(new_lib_as)), "accepted as new_lib_as"))
-    } else if(is.null(new_lib_as) || new_lib_as == TRUE){
-      new_lib_as <- sum
-      print(paste("function", 'sum', "accepted as new_lib_as"))
-    } else if(new_lib_as == FALSE){
-      new_lib_as = max
-      print(paste("function", "max", "accepted as new_lib_as"))
-    } else {
-      stop("no valid new_lib_as input \n please enter NULL, TRUE, FALSE, or a valid function")
-    }
-    
     new_lib_size <- as.integer(new_lib_as(c(lib1, lib2)))
     
     mol_ind <- sample(as.integer(lib1 + lib2), size = new_lib_size)
@@ -505,7 +505,7 @@ BoostClassifier <- setRefClass(
       row1 <- parent_pair[1]
       row2 <- parent_pair[2]
       if(!(is.null(new_lib_as))){
-        print(paste("new_lib_as argument defined \n running dowsamplePair for synthetic cell", i))
+        print(paste("running dowsamplePair for synthetic cell", i))
         new_row <- downsampleCellPair(raw_counts[row1], raw_counts[row2])
       } else {
         new_row <- raw_counts[row1] + raw_counts[row2]
