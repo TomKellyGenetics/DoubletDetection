@@ -5,6 +5,12 @@
 \alias{BoostClassifier-class}
 \alias{BoostClassifier}
 \title{Classifier for doublets in single-cell RNA-seq data}
+\usage{
+library("DoubletDetection")
+clf <- BoostClassifier$new()
+# raw_counts is a cells by genes count matrix
+labels = clf$fit(raw_counts)$predict()
+}
 \arguments{
 \item{raw_counts}{(array-like): Count matrix, oriented cells by genes.}
 

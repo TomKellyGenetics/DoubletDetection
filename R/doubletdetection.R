@@ -1,7 +1,7 @@
-##' @name doublet_detection
+##' @name normalize_counts
 ##' @rdname normalize_counts
 ##'
-##' @title Doublet detection in single-cell RNA-seq data
+##' @title Normalize count array.
 ##' 
 ##' @description Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
 ##' 
@@ -37,6 +37,8 @@ normalize_counts <- function(raw_counts, pseudocount=0.1){
 ##' 
 ##' @title Load count matrix in mtx format
 ##' 
+##' @description Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
+##' 
 ##' @param file character: path to mtx file
 ##' @import Matrix
 ##' 
@@ -68,6 +70,7 @@ load_mtx <- function(file){
 ##' 
 ##' @title  Load count matrix in 10x H5 format
 ##' 
+##' @description Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
 ##' @description Adapted from: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices
 ##' 
 ##' @param file character: path to H5 file
@@ -142,6 +145,13 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @param p_thresh (numeric, optional): hypergeometric test p-value threshold that determines per iteration doublet calls
 ##' @param voter_thresh (numeric, optional): fraction of iterations a cell must be called a doublet
 ##' @param cell1,cell2 (vector, numeric): Gene count vectors.
+
+##' @usage
+##' 
+##' library("DoubletDetection")
+##' clf <- BoostClassifier$new()
+##' # raw_counts is a cells by genes count matrix
+##' labels = clf$fit(raw_counts)$predict()
 
 BoostClassifier <- setRefClass(
   "BoostClassifier",
@@ -468,3 +478,4 @@ BoostClassifier <- setRefClass(
   }
   )
 )
+

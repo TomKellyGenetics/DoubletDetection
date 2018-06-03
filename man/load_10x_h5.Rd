@@ -12,5 +12,7 @@ load_10x_h5(file, genome = NULL, barcode_filtered = TRUE)
 \item{genome}{character: path to top level H5 group}
 }
 \description{
+Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
+
 Adapted from: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices
 }
