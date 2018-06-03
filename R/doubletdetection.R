@@ -191,6 +191,8 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @field raw_counts (array-like): Count matrix, oriented cells by genes.
 ##' @field p_thresh (numeric, optional): hypergeometric test p-value threshold that determines per iteration doublet calls
 ##' @field voter_thresh (numeric, optional): fraction of iterations a cell must be called a doublet
+##' @field cell1,cell2 (vector, numeric): Gene count vectors.
+
 BoostClassifier <- setRefClass(
   "BoostClassifier",
   fields = list(
@@ -204,7 +206,9 @@ BoostClassifier <- setRefClass(
     normalizer = "function",
     raw_counts = "ANY",
     p_thres = "numeric",
-    voter_thres = "numeric"
+    voter_thres = "numeric",
+    cell1 = "numeric",
+    cell2 = "numeric"
   ),
   methods = list(
     initialize = function(boost_rate = 0.25,
@@ -446,12 +450,21 @@ BoostClassifier <- setRefClass(
         p_values[communities_ == -1] <- NA
       }
       return(list(scores, p_values))
-    }
-  )#,
-  #new_function <- function(input){
-  #  print("\nSomething")
-  #  return(output)
-  #}
+    },
+  downsampleCellPair <- function(self, cell1, cell2){ #Downsample the sum of two cells' gene expression profiles.
+    #         Args:
+    #             cell1 (ndarray, ndim=1): Gene count vector.
+    #             cell2 (ndarray, ndim=1): Gene count vector.
+    # 
+    #         Returns:
+    #             ndarray, ndim=1: Downsampled gene count vector.
+    
+  },
+  createDoublets <- function(){ #Create synthetic doublets.
+    #         Sets .parents_
+    
+  }
+  )
 )
   ##' @example 
   # 
@@ -475,15 +488,9 @@ BoostClassifier <- setRefClass(
   # 
   
   # 
-  #     def _downsampleCellPair(self, cell1, cell2):
+  #     def downsampleCellPair(self, cell1, cell2):
   #         """Downsample the sum of two cells' gene expression profiles.
   # 
-  #         Args:
-  #             cell1 (ndarray, ndim=1): Gene count vector.
-  #             cell2 (ndarray, ndim=1): Gene count vector.
-  # 
-  #         Returns:
-  #             ndarray, ndim=1: Downsampled gene count vector.
   #         """
   #         new_cell <- cell1 + cell2
   # 
@@ -500,7 +507,6 @@ BoostClassifier <- setRefClass(
   #     def createDoublets(self):
   #         """Create synthetic doublets.
   # 
-  #         Sets .parents_
   #         """
   #         # Number of synthetic doublets to add
   #         num_synths <- int(boost_rate * num_cells)
@@ -512,7 +518,7 @@ BoostClassifier <- setRefClass(
   #             row1 <- parent_pair[0]
   #             row2 <- parent_pair[1]
   #             if new_lib_as is not NULL:
-  #                 new_row <- _downsampleCellPair(raw_counts_temp[row1], raw_counts_temp[row2])
+  #                 new_row <- downsampleCellPair(raw_counts_temp[row1], raw_counts_temp[row2])
   #             else:
   #                 new_row <- raw_counts_temp[row1] + raw_counts_temp[row2]
   #             synthetic[i] <- new_row
@@ -520,16 +526,3 @@ BoostClassifier <- setRefClass(
   # 
   #         rawsynthetics_temp <<- synthetic
   #         parents_ <- parents
-  
-  
-  # import collections
-  # import warnings
-  # 
-  # import numpy as np
-  # import phenograph
-  # from sklearn.decomposition import PCA
-  # from sklearn.utils import check_array
-  # from scipy.io import mmread
-  # from scipy.stats import hypergeom
-  # import scipy.sparse as sp_sparse
-  # import tables
