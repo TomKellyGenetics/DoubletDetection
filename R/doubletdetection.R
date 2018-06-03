@@ -431,29 +431,37 @@ BoostClassifier <- setRefClass(
       
       # Count number of fake doublets in each community and assign score
       # Number of synth/orig cells in each cluster.
-      synth_cells_per_comm <- collections.Counter(synth_communities_)
-      #         orig_cells_per_comm <- collections.Counter(communities_)
-      #         community_IDs <- orig_cells_per_comm.keys()
-      #         community_scores <- {i: numeric(synth_cells_per_comm[i]) /
-      #                             (synth_cells_per_comm[i] + orig_cells_per_comm[i])
-      #                             for i in community_IDs}
-      #         scores <- np.array([community_scores[i] for i in communities_])
-      # 
-      #         community_p_values <- {i: hypergeom.cdf(synth_cells_per_comm[i], aug_counts.shape[0],
-      #                                             synthetics_temp.shape[0],
-      #                                             synth_cells_per_comm[i] + orig_cells_per_comm[i])
-      #                               for i in community_IDs}
-      #         p_values <- np.array([community_p_values[i] for i in communities_])
-      # 
-      #         if min_ID < 0:
-      #             scores[communities_ == -1] <- np.nan
-      #             p_values[communities_ == -1] <- np.nan
-      # 
-      #         return scores, p_values
+      synth_cells_per_comm <- table(synth_communities_)
+      orig_cells_per_comm <- table(communities_)
+      community_IDs <- names(orig_cells_per_comm)
+      community_scores <- rep(NA, length(community_IDs))
+      for(i in 1:length(community_scores)){
+         community_scores[i] <- as.numeric(synth_cells_per_comm[i]) / (synth_cells_per_comm[i] + orig_cells_per_comm[i])
+      }
+      scores <- rep(NA, length(communities_))
+      for(i in 1: length(scores)){
+        scores[i] <- community_scores[i] 
+      }
+      community_p_values <- rep(NA, length(community_IDs))
+      for(i in 1:length(community_p_values)){
+        community_p_values <-phyper(synth_cells_per_comm[i], nrow(aug_counts), nrow(synthetics_temp), synth_cells_per_comm[i] + orig_cells_per_comm[i])
+      }
+      p_values <- rep(NA, length(communities_))
+      for(i in 1: length(p_values)){
+        p_values[i] <- community_p_values[i] 
+      }
+      if(min_ID < 0){
+        scores[communities_ == -1] <- NA
+        p_values[communities_ == -1] <- NA
+      }
+      return(list(scores, p_values))
     }
-      )
-  )
-  
+  ),
+  #new_function <- function(input){
+  #  print("\nSomething")
+  #  return(output)
+  #}
+)
   ##' @example 
   # 
   # class BoostClassifier:
