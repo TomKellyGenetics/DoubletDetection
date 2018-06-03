@@ -284,16 +284,15 @@ BoostClassifier <- setRefClass(
         new_lib_as <<- new_lib_as
         print(paste("function", deparse(substitute(new_lib_as)), "accepted as new_lib_as"))
       } else if(is.null(new_lib_as) || new_lib_as == TRUE){
-        new_lib_as <- sum
+        new_lib_as <<- sum
         print(paste("function", 'sum', "accepted as new_lib_as"))
       } else if(new_lib_as == FALSE){
-        new_lib_as = max
+        new_lib_as <<- max
         print(paste("function", "max", "accepted as new_lib_as"))
       } else {
         stop("no valid new_lib_as input \n please enter NULL, TRUE, FALSE, or a valid function")
       }
-      new_lib_as <<- new_lib_as
-      
+
       #check prune argument defined (to pass to phenograph)
       if(!("prune" %in% names(phenograph_parameters))){
         phenograph_parameters$prune <<- TRUE
@@ -327,13 +326,13 @@ BoostClassifier <- setRefClass(
       if(!is.matrix(raw_counts) & length(dim(raw_counts)) == 2){ # Only catches sparse error. Non-finite & n_dims still raised.
         if(is(raw_counts, "sparseMatrix")){
           warning("Sparse raw_counts is automatically densified")
-          raw_counts <- as.matrix(raw_counts)
+          raw_counts <<- as.matrix(raw_counts)
         } else if(is.data.frame(raw_counts)){
           warning("raw_counts data.frame automatically converted to type matrix")
-          raw_counts <- as.matrix(raw_counts)
+          raw_counts <<- as.matrix(raw_counts)
         } else {
           warning("raw_counts requires matrix input \n Attempting to convert to type matrix.")
-          raw_counts <- as.matrix(raw_counts)
+          raw_counts <<- as.matrix(raw_counts)
         }
       } else {
         if(all(is.infinite(raw_counts))){
@@ -347,7 +346,7 @@ BoostClassifier <- setRefClass(
         if(n_top_var_genes < nrow(raw_counts)){
           top_var_genes_ <- top_var_indexes[1:n_top_var_genes]
           #filter to top genes
-          raw_counts <- raw_counts[, top_var_genes_]
+          raw_counts <<- raw_counts[, top_var_genes_]
         } else {
           warning("n_top_var_genes exceeds total genes \n processing full dataset")
           top_var_genes_ <- top_var_indexes[1:min(n_top_var_genes, nrow(raw_counts))]
@@ -356,23 +355,23 @@ BoostClassifier <- setRefClass(
       #initialise self object
       #self <- list()
       raw_counts <<- raw_counts
-      num_genes <<- nrow(raw_counts)
-      num_cells <<- ncol(raw_counts)
+      num_genes <- nrow(raw_counts)
+      num_cells <- ncol(raw_counts)
       
-      all_scores_ <<- matrix(0, n_iters, num_cells)
-      all_p_values_ <<- matrix(0, n_iters, num_cells)
-      all_communities <<- matrix(0, n_iters, num_cells)
+      all_scores_ <- matrix(0, n_iters, num_cells)
+      all_p_values_ <- matrix(0, n_iters, num_cells)
+      all_communities <- matrix(0, n_iters, num_cells)
       
-      all_parents <<- list()
+      all_parents <- list()
       all_synth_communities <- matrix(0, n_iters,as.integer(boost_rate * num_cells))
       
       for(i in 1:n_iters){
         print(paste0("Iteration ", i, "/", n_iters))
-        all_scores_[i]  <<- one_fit()
-        all_p_values_[i] <<- one_fit()
-        all_communities[i] <<- communities_
-        all_parents <<- c(all_parents, parents_)
-        all_synth_communities[i] <<- synth_communities_
+        all_scores_[i]  <- one_fit()
+        all_p_values_[i] <- one_fit()
+        all_communities[i] <- communities_
+        all_parents <- c(all_parents, parents_)
+        all_synth_communities[i] <- synth_communities_
       }
       # Release unneeded large data vars
       rm(raw_counts, norm_counts, rawsynthetics, synthetics)
@@ -381,9 +380,9 @@ BoostClassifier <- setRefClass(
       #attr(self, "rawsynthetics") <- NULL
       #attr(self, "synthetics") <- NULL
       
-      communities_ <<- all_communities
-      parents_ <<- all_parents
-      synth_communities_ <<- all_synth_communities
+      communities_ <- all_communities
+      parents_ <- all_parents
+      synth_communities_ <- all_synth_communities
       
       self <- list(all_scores_, all_p_values_, communities_, top_var_genes, parents, synth_communities_)
       #return(self)
