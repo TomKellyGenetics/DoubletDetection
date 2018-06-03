@@ -183,7 +183,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
 ##' @field n_components (integer optional): Number of principal components used for clustering.
 ##' @field n_top_var_genes (integer optional): Number of highest variance genes to use; other genes discarded. Will use all genes when zero.
-##' @field new_lib_as: (([integer integer]) -> integer optional): Method to use in choosing library size for synthetic doublets. Defaults to NULL which makes synthetic doublets the exact addition of its parents; alternative is new_lib_as=max.
+##' @field new_lib_as: (([integer integer]) -> integer optional): Method to use in choosing library size for synthetic doublets. Defaults to NULL which makes synthetic doublets the exact addition of its parents; alternative is new_lib_as = max.
 ##' @field replace (logical, optional): If FALSE, a cell will be selected as a synthetic doublet's parent no more than once.
 ##' @field phenograph_parameters (list, optional): Parameter dict to pass directly to Phenograph. Note that we change the Phenograph 'prune' default to TRUE; you must specifically include 'prune': FALSE here to change this.
 ##' @field n_iters (integer optional): Number of fit operations from which to collect p-values. Defualt value is 25. normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
@@ -226,10 +226,10 @@ BoostClassifier <- setRefClass(
       #             clustering.
       #         n_top_var_genes (integer optional): Number of highest variance genes to
       #             use; other genes discarded. Will use all genes when zero.
-      #         new_lib_as: (([integer int]) -> integer optional): Method to use in choosing
+      #         new_lib_as: (([integer integer]) -> integer optional): Method to use in choosing
       #             library size for synthetic doublets. Defaults to NULL which makes
       #             synthetic doublets the exact addition of its parents; alternative
-      #             is new_lib_as=np.max.
+      #             is new_lib_as = max.
       #         replace (logical, optional): If FALSE, a cell will be selected as a
       #             synthetic doublet's parent no more than once.
       #         phenograph_parameters (dict, optional): Parameter dict to pass directly
@@ -396,7 +396,7 @@ BoostClassifier <- setRefClass(
         potential_cutoffs <- unique(all_scores_[is.na(all_scores_) == FALSE])
         if(length(potential_cutoffs) > 1){
           dropoff <- potential_cutoffs[2:length(potential_cutoffs)] - potential_cutoffs[1:(1-length(potential_cutoffs))]
-          max_dropoff <- which(dropoff == max(dropoff)) #+ 1
+          max_dropoff <- which(dropoff == max(dropoff)) #+ 1 (not needed for 1-indexed language)
         } else {
           # Most likely pathological dataset, only one (or no) clusters
           max_dropoff <- 1
@@ -459,70 +459,44 @@ BoostClassifier <- setRefClass(
     #         Returns:
     #             ndarray, ndim=1: Downsampled gene count vector.
     
+    #create doublet cells
+    new_cell <- cell1 + cell2
+    
+    lib1 <- sum(cell1)
+    lib2 <- sum(cell2)
+    
+    
+    new_lib_size <- as.integer(new_lib_as(c(lib1, lib2)))
+    
+    mol_ind <- sample(as.integer(lib1 + lib2), size = new_lib_size)
+    #mol_ind <- mol_ind #+1 #(vectorised) #not needed for 1-index language
+    
+    bins <- c(0, cumsum(new_cell))
+    new_cell <- hist(mol_ind, bins)$counts #extract counts from histogram 
+    
+    return(new_cell)
   },
   createDoublets <- function(){ #Create synthetic doublets.
     #         Sets .parents_
     
+    #         # Number of synthetic doublets to add
+    #         num_synths <- as.integer(boost_rate * num_cells)
+    #         synthetic <- np.zeros((num_synths, num_genes))
+    #         parents <- []
+    # 
+    #         choices <- np.random.choice(num_cells, size=(num_synths, 2), replace=replace)
+    #         for i, parent_pair in enumerate(choices):
+    #             row1 <- parent_pair[0]
+    #             row2 <- parent_pair[1]
+    #             if new_lib_as is not NULL:
+    #                 new_row <- downsampleCellPair(raw_counts_temp[row1], raw_counts_temp[row2])
+    #             else:
+    #                 new_row <- raw_counts_temp[row1] + raw_counts_temp[row2]
+    #             synthetic[i] <- new_row
+    #             parents.append([row1, row2])
+    # 
+    #         rawsynthetics_temp <<- synthetic
+    #         parents_ <- parents
   }
   )
 )
-  ##' @example 
-  # 
-  # class BoostClassifier:
-  #     """Classifier for doublets in single-cell RNA-seq data.
-  #
-  # 
-  #     def __init__(self, boost_rate=0.25, n_components=30, n_top_var_genes=10000, new_lib_as=NULL,
-  #                  replace=FALSE, phenograph_parameters={'prune': TRUE}, n_iters=25,
-  #                  normalizer=normalize_counts):
-  # 
-  
-  # 
-  #     def predict(self, p_thresh=0.99, voter_thresh=0.9):
-  #         """Produce doublet calls from fitted classifier
-  
-  # 
-  #     def one_fit(self):
-  #         print("\nCreating downsampled doublets...")
-  #         createDoublets()
-  # 
-  
-  # 
-  #     def downsampleCellPair(self, cell1, cell2):
-  #         """Downsample the sum of two cells' gene expression profiles.
-  # 
-  #         """
-  #         new_cell <- cell1 + cell2
-  # 
-  #         lib1 <- np.sum(cell1)
-  #         lib2 <- np.sum(cell2)
-  #         new_lib_size <- int(new_lib_as([lib1, lib2]))
-  #         mol_ind <- np.random.permutation(int(lib1 + lib2))[:new_lib_size]
-  #         mol_ind += 1
-  #         bins <- np.append(np.zeros((1)), np.cumsum(new_cell))
-  #         new_cell <- np.histogram(mol_ind, bins)[0]
-  # 
-  #         return new_cell
-  # 
-  #     def createDoublets(self):
-  #         """Create synthetic doublets.
-  # 
-  #         """
-  #         # Number of synthetic doublets to add
-  #         num_synths <- int(boost_rate * num_cells)
-  #         synthetic <- np.zeros((num_synths, num_genes))
-  #         parents <- []
-  # 
-  #         choices <- np.random.choice(num_cells, size=(num_synths, 2), replace=replace)
-  #         for i, parent_pair in enumerate(choices):
-  #             row1 <- parent_pair[0]
-  #             row2 <- parent_pair[1]
-  #             if new_lib_as is not NULL:
-  #                 new_row <- downsampleCellPair(raw_counts_temp[row1], raw_counts_temp[row2])
-  #             else:
-  #                 new_row <- raw_counts_temp[row1] + raw_counts_temp[row2]
-  #             synthetic[i] <- new_row
-  #             parents.append([row1, row2])
-  # 
-  #         rawsynthetics_temp <<- synthetic
-  #         parents_ <- parents
