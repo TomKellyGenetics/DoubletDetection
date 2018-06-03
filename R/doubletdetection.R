@@ -434,29 +434,20 @@ BoostClassifier <- setRefClass(
       synth_cells_per_comm <- table(synth_communities_)
       orig_cells_per_comm <- table(communities_)
       community_IDs <- names(orig_cells_per_comm)
-      community_scores <- rep(NA, length(community_IDs))
-      for(i in 1:length(community_scores)){
-         community_scores[i] <- as.numeric(synth_cells_per_comm[i]) / (synth_cells_per_comm[i] + orig_cells_per_comm[i])
-      }
-      scores <- rep(NA, length(communities_))
-      for(i in 1: length(scores)){
-        scores[i] <- community_scores[i] 
-      }
-      community_p_values <- rep(NA, length(community_IDs))
-      for(i in 1:length(community_p_values)){
-        community_p_values <-phyper(synth_cells_per_comm[i], nrow(aug_counts), nrow(synthetics_temp), synth_cells_per_comm[i] + orig_cells_per_comm[i])
-      }
-      p_values <- rep(NA, length(communities_))
-      for(i in 1: length(p_values)){
-        p_values[i] <- community_p_values[i] 
-      }
+      community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
+      scores <- sapply(1:length(communities_), function(i) community_scores[i])
+      community_p_values <- sapply(1:length(community_p_values), function(i){
+        phyper(synth_cells_per_comm[i], nrow(aug_counts), nrow(synthetics_temp), synth_cells_per_comm[i] + orig_cells_per_comm[i])
+      })
+      p_values <- sapply(1:length(communities_), function(i) community_p_values[i])
+      
       if(min_ID < 0){
         scores[communities_ == -1] <- NA
         p_values[communities_ == -1] <- NA
       }
       return(list(scores, p_values))
     }
-  ),
+  )#,
   #new_function <- function(input){
   #  print("\nSomething")
   #  return(output)
