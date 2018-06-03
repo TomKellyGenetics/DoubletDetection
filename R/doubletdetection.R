@@ -345,12 +345,12 @@ BoostClassifier <- setRefClass(
       num_genes <<- nrow(raw_counts)
       num_cells <<- ncol(raw_counts)
       
-      all_scores_ <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
-      all_p_values_ <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
-      all_communities <<- matrix(rep(0, n_iters* num_cells), n_iters, num_cells)
+      all_scores_ <<- matrix(0, n_iters, num_cells)
+      all_p_values_ <<- matrix(0, n_iters, num_cells)
+      all_communities <<- matrix(0, n_iters, num_cells)
       
       all_parents <<- list()
-      all_synth_communities <- matrix(rep(0, n_iters*as.integer(boost_rate * num_cells)), n_iters,as.integer(boost_rate * num_cells))
+      all_synth_communities <- matrix(0, n_iters,as.integer(boost_rate * num_cells))
       
       for(i in 1:n_iters){
         print(paste0("Iteration ", i, "/", n_iters))
@@ -451,7 +451,7 @@ BoostClassifier <- setRefClass(
       }
       return(list(scores, p_values))
     },
-  downsampleCellPair <- function(self, cell1, cell2){ #Downsample the sum of two cells' gene expression profiles.
+  downsampleCellPair <- function(cell1, cell2){ #Downsample the sum of two cells' gene expression profiles.
     #         Args:
     #             cell1 (ndarray, ndim=1): Gene count vector.
     #             cell2 (ndarray, ndim=1): Gene count vector.
@@ -466,15 +466,15 @@ BoostClassifier <- setRefClass(
     lib2 <- sum(cell2)
     
     #check new_lib_as function
-    if(is.null(new_lib_as) || new_lib_as == TRUE){
+    if(is.function(new_lib_as)){
+      new_lib_as <<- new_lib_as
+      print(paste("function", deparse(substitute(new_lib_as)), "accepted as new_lib_as"))
+    } else if(is.null(new_lib_as) || new_lib_as == TRUE){
       new_lib_as <- sum
       print(paste("function", 'sum', "accepted as new_lib_as"))
     } else if(new_lib_as == FALSE){
       new_lib_as = max
       print(paste("function", "max", "accepted as new_lib_as"))
-    } else if(is.function(new_lib_as)){
-      new_lib_as <<- new_lib_as
-      print(paste("function", deparse(substitute(new_lib_as)), "accepted as new_lib_as"))
     } else {
       stop("no valid new_lib_as input \n please enter NULL, TRUE, FALSE, or a valid function")
     }
@@ -492,24 +492,29 @@ BoostClassifier <- setRefClass(
   createDoublets <- function(){ #Create synthetic doublets.
     #         Sets .parents_
     
-    #         # Number of synthetic doublets to add
-    #         num_synths <- as.integer(boost_rate * num_cells)
-    #         synthetic <- np.zeros((num_synths, num_genes))
-    #         parents <- []
-    # 
-    #         choices <- np.random.choice(num_cells, size=(num_synths, 2), replace=replace)
-    #         for i, parent_pair in enumerate(choices):
-    #             row1 <- parent_pair[0]
-    #             row2 <- parent_pair[1]
-    #             if new_lib_as is not NULL:
-    #                 new_row <- downsampleCellPair(raw_counts_temp[row1], raw_counts_temp[row2])
-    #             else:
-    #                 new_row <- raw_counts_temp[row1] + raw_counts_temp[row2]
-    #             synthetic[i] <- new_row
-    #             parents.append([row1, row2])
-    # 
-    #         rawsynthetics_temp <<- synthetic
-    #         parents_ <- parents
+    # Number of synthetic doublets to add
+    num_synths <- as.integer(boost_rate * num_cells)
+    synthetic <- matrix(0, num_synths, num_genes)
+    
+    parents <- list()
+    
+    choices <- matrix(sample(num_cells, size=num_synths*2, replace=replace), num_synths, 2)
+    synthetic <- rep(NA, nrow(choices))
+    for(i in 1:nrow(choices)){
+      parent_pair <- choices[i, ]
+      row1 <- parent_pair[1]
+      row2 <- parent_pair[2]
+      if(!(is.null(new_lib_as))){
+        print(paste("new_lib_as argument defined \n running dowsamplePair for synthetic cell", i))
+        new_row <- downsampleCellPair(raw_counts[row1], raw_counts[row2])
+      } else {
+        new_row <- raw_counts[row1] + raw_counts[row2]
+      }
+      synthetic[i] <- new_row
+      parents[[i]] <- c(row1, row2)
+    }
+    rawsynthetics_temp <<- synthetic
+    parents_ <<- parents
   }
   )
 )
