@@ -465,6 +465,19 @@ BoostClassifier <- setRefClass(
     lib1 <- sum(cell1)
     lib2 <- sum(cell2)
     
+    #check new_lib_as function
+    if(is.null(new_lib_as) || new_lib_as == TRUE){
+      new_lib_as <- sum
+      print(paste("function", 'sum', "accepted as new_lib_as"))
+    } else if(new_lib_as == FALSE){
+      new_lib_as = max
+      print(paste("function", "max", "accepted as new_lib_as"))
+    } else if(is.function(new_lib_as)){
+      new_lib_as <<- new_lib_as
+      print(paste("function", deparse(substitute(new_lib_as)), "accepted as new_lib_as"))
+    } else {
+      stop("no valid new_lib_as input \n please enter NULL, TRUE, FALSE, or a valid function")
+    }
     
     new_lib_size <- as.integer(new_lib_as(c(lib1, lib2)))
     
