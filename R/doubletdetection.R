@@ -1,5 +1,5 @@
 ##' @name doublet_detection
-##' @rdname doublet_detection
+##' @rdname normalize_counts
 ##'
 ##' @title Doublet detection in single-cell RNA-seq data
 ##' 
@@ -32,62 +32,10 @@ normalize_counts <- function(raw_counts, pseudocount=0.1){
   return(normed)
 }
 
-##' @rdname doublet_detection
-##' 
-##' @param file character: path to H5 file
-##' @param genome character: path to top level H5 group
-##' @import hdf5r Matrix
-##' 
-##' @export
-load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
-  #     Load count matrix in 10x H5 format
-  #        Adapted from:
-  #        https://support.10xgenomics.com/single-cell-gene-expression/software/
-  #        pipelines/latest/advanced/h5_matrices
-  # 
-  #     Args:
-  #         file (str): Path to H5 file
-  #         genome (str): genome, top level h5 group
-  # 
-  #     Returns:
-  #         ndarray: Raw count matrix.
-  #         ndarray: Barcodes
-  #         ndarray: Gene names
-  if (!file.exists(normalizePath((file)))) 
-    stop("Could not find the path of file: '", file, 
-         "'. Please double-check if the directory exists.\n")
-  if (!dir.exists(normalizePath(paste(dirname(file))))) 
-    stop("Could not find the pipestance output directory: '", 
-         normalizePath(paste(dirname(file))), "'. Please double-check if the directory exists.\n")
-  h5_path <- file.path(normalizePath(paste(dirname(file))), ifelse(barcode_filtered, 
-                                                                   "filtered_gene_bc_matrices_h5.h5", "raw_gene_bc_matrices_h5.h5"))
-  if (!file.exists(h5_path)) {
-    stop(sprintf("Could not find matrix H5: %s\n", h5_path))
-  }
-  file.h5 <- H5File$new(h5_path, mode = "r")
-  #names(file.h5)
-  #file.h5$ls(recursive=TRUE)
-  
-  # gene_ids <- file.h5[[paste0(genome, "/genes")]][]
-  #gene_names <- eval(parse(text = paste0("file.h5[[\"", genome, "\"]][[\"gene_names\"]]")))[]
-  #barcodes <- eval(parse(text = paste0("file.h5[[\"", genome, "\"]]")))[["barcodes"]]
-  gene_names <- file.h5[[paste0(genome, "/gene_names")]][]
-  barcodes <- file.h5[[paste0(genome, "/barcodes")]][]
-  data <- file.h5[[paste0(genome, "/data")]][]
-  indices <- file.h5[[paste0(genome, "/indices")]][]
-  indptr <- file.h5[[paste0(genome, "/indptr")]][]
-  shape <- file.h5[[paste0(genome, "/shape")]][]
-  #h5attr_names(file.h5[[paste0(genome, "/shape")]])
-  matrix <- sparseMatrix(i = indices+1, p = indptr, x = data, dims = shape)
-  dense_matrix <- matrix(matrix, nrow = shape[1], ncol = shape[2])
-  
-  rownames(dense_matrix) <- gene_names
-  colnames(dense_matrix) <- barcodes
-  
-  return(dense_matrix)
-}
 
-##' @rdname doublet_detection
+##' @rdname load_mtx
+##' 
+##' @title Load count matrix in mtx format
 ##' 
 ##' @param file character: path to mtx file
 ##' @import Matrix
@@ -116,7 +64,11 @@ load_mtx <- function(file){
   return(raw_counts)
 }
 
-##' @rdname doublet_detection
+##' @rdname load_10x_h5
+##' 
+##' @title  Load count matrix in 10x H5 format
+##' 
+##' @description Adapted from: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices
 ##' 
 ##' @param file character: path to H5 file
 ##' @param genome character: path to top level H5 group
@@ -124,7 +76,7 @@ load_mtx <- function(file){
 ##' 
 ##' @export
 load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
-  #     Load count matrix in 10x H5 format
+  #    
   #        Adapted from:
   #        https://support.10xgenomics.com/single-cell-gene-expression/software/
   #        pipelines/latest/advanced/h5_matrices
@@ -171,10 +123,9 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
   return(dense_matrix)
 }
 
-##' @rdname doublet_detection
+##' @rdname BoostClassifier
 ##' @title Classifier for doublets in single-cell RNA-seq data
 ##' 
-##' @param raw_counts (array-like): Count matrix, oriented cells by genes.
 ##' @import Matrix stats Rphenograph
 ##' 
 ##' @export
@@ -201,12 +152,12 @@ BoostClassifier <- setRefClass(
     replace = "logical",
     phenograph_parameters = "list",
     n_iters = "integer",
-    normalizer = "function",
-    raw_counts = "ANY",
-    p_thres = "numeric",
-    voter_thres = "numeric",
-    cell1 = "numeric",
-    cell2 = "numeric"
+    normalizer = "function"#,
+    #raw_counts = "ANY",
+    #p_thres = "numeric",
+    #voter_thres = "numeric",
+    #cell1 = "numeric",
+    #cell2 = "numeric"
   ),
   methods = list(
     initialize = function(boost_rate = 0.25,
@@ -217,6 +168,7 @@ BoostClassifier <- setRefClass(
                           phenograph_parameters = list(prune = TRUE),
                           n_iters = 25L,
                           normalizer = normalize_counts){
+      "This method is called when you create an instance of the class."
       #     Parameters:
       #         boost_rate (numeric, optional): Proportion of cell population size to
       #             produce as synthetic doublets.
@@ -261,7 +213,6 @@ BoostClassifier <- setRefClass(
       #             generated if n_top_var_genes <= 0.
       #         voting_average_ (ndarray): Fraction of iterations each cell is called a
       #             doublet.
-      #This method is called when you create an instance of the class.
       boost_rate <<- boost_rate
       replace <<- replace
       n_iters <<- n_iters
@@ -311,7 +262,7 @@ BoostClassifier <- setRefClass(
       print("Reference Class BoostClassifier has been initialized")
     },
     fit = function(raw_counts){
-      #Fits the classifier on raw_counts.
+      "Fits the classifier on raw_counts."
       #         Args:
       #             raw_counts (array-like): Count matrix, oriented cells by genes.
       # 
@@ -324,13 +275,13 @@ BoostClassifier <- setRefClass(
       if(!is.matrix(raw_counts) & length(dim(raw_counts)) == 2){ # Only catches sparse error. Non-finite & n_dims still raised.
         if(is(raw_counts, "sparseMatrix")){
           warning("Sparse raw_counts is automatically densified")
-          raw_counts <<- as.matrix(raw_counts)
+          raw_counts <- as.matrix(raw_counts)
         } else if(is.data.frame(raw_counts)){
           warning("raw_counts data.frame automatically converted to type matrix")
-          raw_counts <<- as.matrix(raw_counts)
+          raw_counts <- as.matrix(raw_counts)
         } else {
           warning("raw_counts requires matrix input \n Attempting to convert to type matrix.")
-          raw_counts <<- as.matrix(raw_counts)
+          raw_counts <- as.matrix(raw_counts)
         }
       } else {
         if(all(is.infinite(raw_counts))){
@@ -344,7 +295,7 @@ BoostClassifier <- setRefClass(
         if(n_top_var_genes < nrow(raw_counts)){
           top_var_genes_ <- top_var_indexes[1:n_top_var_genes]
           #filter to top genes
-          raw_counts <<- raw_counts[, top_var_genes_]
+          raw_counts <- raw_counts[, top_var_genes_]
         } else {
           warning("n_top_var_genes exceeds total genes \n processing full dataset")
           top_var_genes_ <- top_var_indexes[1:min(n_top_var_genes, nrow(raw_counts))]
@@ -352,7 +303,7 @@ BoostClassifier <- setRefClass(
       }
       #initialise self object
       #self <- list()
-      raw_counts <<- raw_counts
+      raw_counts <- raw_counts
       num_genes <- nrow(raw_counts)
       num_cells <- ncol(raw_counts)
       
@@ -385,7 +336,8 @@ BoostClassifier <- setRefClass(
       self <- list(all_scores_, all_p_values_, communities_, top_var_genes, parents, synth_communities_)
       #return(self)
     },
-    predict = function(p_thresh = 0.99, voter_thresh = 0.9){ #Produce doublet calls from fitted classifier
+    predict = function(p_thresh = 0.99, voter_thresh = 0.9){ 
+      "Produce doublet calls from fitted classifier."
       #         Args:
       #             p_thresh (numeric, optional): hypergeometric test p-value threshold
       #                 that determines per iteration doublet calls
