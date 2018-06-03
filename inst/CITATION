@@ -4,11 +4,11 @@ citEntry(entry = "Manual",
   title        = "DoubletDetection: a package to detect doublets (technical errors) in single-cell RNA-seq count matrices.",
   author       = personList(as.person("Adam Gayoso"),as.person("S. Thomas Kelly"), as.person("Jonathan Shor")),
   year         = "2018",
-  note         = "R package version 0.1.0.9001",
+  note         = "R package version 0.1.0",
   url          = "https://github.com/TomKellyGenetics/DoubletDetection",
 
   textVersion  =
-  paste("Adam Gayoso, S. Thomas Kelly, and Jonathon Shor (2018). DoubletDetection: a package to detect doublets (technical errors) in single-cell RNA-seq count matrices. R package version 0.1.0.9001",
+  paste("Adam Gayoso, S. Thomas Kelly, and Jonathon Shor (2018). DoubletDetection: a package to detect doublets (technical errors) in single-cell RNA-seq count matrices. R package version 0.1.0",
          "https://github.com/TomKellyGenetics/DoubletDetection")
 )
 

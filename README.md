@@ -41,7 +41,7 @@ detected doublet.
 
 ## R Version
 
-These functions and methods (for the Reference Class) have been documented and can be accessed in the R help system. A [vignette][https://rawgit.com/TomKellyGenetics/DoubletDetection/r-implementation/vignettes/PBMC_8k_vignette.html] will be prepared using Rmarkdown in due course.
+These functions and methods (for the Reference Class) have been documented and can be accessed in the R help system. A [vignette](https://rawgit.com/TomKellyGenetics/DoubletDetection/r-implementation/vignettes/PBMC_8k_vignette.html) will be prepared using Rmarkdown in due course.
 
 ## Python Version
 
@@ -67,6 +67,6 @@ https://github.com/TomKellyGenetics/DoubletDetection"
 
 Please acknowledge the original contributors when using the R implementation.
 
-bioRxiv submission is in progress. Please refer to the [Python Repository][ https://github.com/JonathanShor/DoubletDetection] for more details.
+bioRxiv submission is in progress. Please refer to the [Python Repository]() https://github.com/JonathanShor/DoubletDetection) for more details.
 
 This project is licensed under the terms of the MIT license (in accordance with the license of the original repository).
