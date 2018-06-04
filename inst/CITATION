@@ -1,0 +1,15 @@
+citHeader("To cite the DoubletDetection package in publications use:")
+
+citEntry(entry = "Manual",
+  title        = "DoubletDetection: a package to detect doublets (technical errors) in single-cell RNA-seq count matrices.",
+  author       = personList(as.person("Adam Gayoso"),as.person("S. Thomas Kelly"), as.person("Jonathan Shor")),
+  year         = "2018",
+  note         = "R package version 2.1.0",
+  url          = "https://github.com/TomKellyGenetics/DoubletDetection",
+
+  textVersion  =
+  paste("Adam Gayoso, S. Thomas Kelly, and Jonathon Shor (2018). DoubletDetection: a package to detect doublets (technical errors) in single-cell RNA-seq count matrices. R package version 2.1.0",
+         "https://github.com/TomKellyGenetics/DoubletDetection")
+)
+
+citFooter(paste("Please also acknowledge the original Python Implementation: \n https://github.com/JonathanShor/DoubletDetection \n (Manuscript in Preparation for Preprint Release)"))
