@@ -9,10 +9,11 @@
 library("DoubletDetection")
 clf <- BoostClassifier$new()
 # raw_counts is a cells by genes count matrix
-labels = clf$fit(raw_counts)$predict()
+labels <- clf$fit(raw_counts)$predict()
+#returns a vector of 1 for doublet and 0 for singlet
 }
 \arguments{
-\item{raw_counts}{(array-like): Count matrix, oriented cells by genes.}
+\item{raw_counts}{(matrix): Count matrix, oriented genes by cells. Can be sparse matrix or data.frame input.}
 
 \item{p_thresh}{(numeric, optional): hypergeometric test p-value threshold that determines per iteration doublet calls}
 
@@ -38,6 +39,12 @@ labels = clf$fit(raw_counts)$predict()
 \item{\code{n_iters}}{(integer optional): Number of fit operations from which to collect p-values. Defualt value is 25. normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)}
 
 \item{\code{normalizer}}{((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)}
+
+\item{\code{num_genes,num_cells}}{(numeric): number of genes and cells, rows and columns of raw_counts matrix respectively.}
+
+\item{\code{rawsynthetics}}{(matrix): Count matrix, oriented genes by cells. Synthetic doublets generated.}
+
+\item{\code{parents_}}{(list): Pairs of column indices for cells sampled to generate synthetic doublets.}
 }}
 
 \section{Methods}{
