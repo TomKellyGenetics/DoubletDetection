@@ -441,7 +441,14 @@ BoostClassifier <- setRefClass(
       #print(dim(raw_counts))
       #print(dim(rawsynthetics))
       
-      aug_counts <- normalizer(cbind(raw_counts, rawsynthetics)) #remove  for internal variables
+      aug_counts <- cbind(raw_counts, rawsynthetics) #combine raw_counts and synthetic doublets
+      gene_counts <- apply(aug_counts, 1, sum)
+      if(all(gene_counts == 0)){
+        aug_counts <- aug_counts[apply(aug_counts, 1, sum) != 0,] #remove genes with zero total counts
+        warning(paste(sum(all(gene_counts == 0), "genes with zero total removed")))
+      }
+      aug_counts <- normalizer(aug_counts) #normalise combined ataset
+      
       norm_counts <- aug_counts[,1:num_cells]
       synthetics <- aug_counts[, (num_cells + 1):ncol(aug_counts)]
       
