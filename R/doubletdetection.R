@@ -158,7 +158,8 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' labels <- clf$fit(raw_counts)$predict()
 ##' #returns a vector of 1 for doublet and 0 for singlet
 ##' 
-##' @export
+##' @export BoostClassifier
+##' @exportClass BoostClassifier
 
 BoostClassifier <- setRefClass(
   "BoostClassifier",
