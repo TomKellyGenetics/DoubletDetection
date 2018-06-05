@@ -2,9 +2,9 @@ Package: DoubletDetection
 Type: Package
 Title: DoubletDetection is a package to detect doublets (technical errors) in single-cell RNA-seq count matrices.
 Version: 2.1.0
-Author: Adam Gayoso and Jonathan Shor
-Maintainer: Tom Kelly <tom.kelly@riken.jp>
-Description: Identifies doublets (technical errors) in single-cell RNA-seq count matrices.
+Author: Adam Gayoso, Jonathan Shor, Ambrose J. Carr, and S. Thomas Kelly
+Maintainer: S. Thomas Kelly <tom.kelly@riken.jp>
+Description: A method to detect and enable removal of doublets from single-cell RNA-sequencing data
 License: MIT
 Encoding: UTF-8
 LazyData: true
