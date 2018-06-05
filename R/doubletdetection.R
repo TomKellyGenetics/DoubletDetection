@@ -59,10 +59,10 @@ load_mtx <- function(file){
   }
   gene_names <- read.table(paste(group, "genes.tsv", sep = "/"))[,1]
   barcodes <- readLines(paste(group, "barcodes.tsv", sep = "/"))
-  raw_counts <- readMM(paste(group, "matrix.mtx", sep = "/"))
+  raw_counts <<- readMM(paste(group, "matrix.mtx", sep = "/"))
   rownames(raw_counts) <- gene_names
   colnames(raw_counts) <- barcodes
-  raw_counts <- as.matrix(raw_counts)
+  raw_counts <<- as.matrix(raw_counts)
   return(raw_counts)
 }
 
@@ -333,14 +333,14 @@ BoostClassifier <- setRefClass(
       if(!is.matrix(raw_counts) & length(dim(raw_counts)) == 2){ # Only catches sparse error. Non-finite & n_dims still raised.
         if(is(raw_counts, "sparseMatrix")){
           warning("Sparse raw_counts is automatically densified")
-          raw_counts <- as.matrix(raw_counts)
+          raw_counts <<- as.matrix(raw_counts)
         } else if(is.data.frame(raw_counts)){
           warning("raw_counts data.frame automatically converted to type matrix")
-          raw_counts <- as.matrix(raw_counts)
+          raw_counts <<- as.matrix(raw_counts)
         } else {
           warning("raw_counts requires matrix input")
           print("Attempting to convert to type matrix.")
-          raw_counts <- as.matrix(raw_counts)
+          raw_counts <<- as.matrix(raw_counts)
         }
       } else {
         if(all(is.infinite(raw_counts))){
@@ -354,7 +354,7 @@ BoostClassifier <- setRefClass(
         if(n_top_var_genes < nrow(raw_counts)){
           top_var_genes_ <<- top_var_indexes[1:n_top_var_genes]
           #filter to top genes
-          raw_counts <- raw_counts[top_var_genes_,]
+          raw_counts <<- raw_counts[top_var_genes_,]
         } else {
           warning("n_top_var_genes exceeds total genes")
           print("processing full dataset")
