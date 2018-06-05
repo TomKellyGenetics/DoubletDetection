@@ -179,8 +179,8 @@ BoostClassifier <- setRefClass(
     communities_ = "ANY",
     top_var_genes_ = "ANY",
     parents_ = "list",
-    synth_communities_ = "ANY"#,
-    #raw_counts = "ANY",
+    synth_communities_ = "ANY",
+    raw_counts = "ANY"#,
     #p_thres = "numeric",
     #voter_thres = "numeric",
     #cell1 = "numeric",
@@ -363,7 +363,7 @@ BoostClassifier <- setRefClass(
       }
       #initialise self object
       #self <- list()
-      raw_counts <- raw_counts
+      raw_counts <<- raw_counts
       num_genes <<- nrow(raw_counts)
       num_cells <<- ncol(raw_counts)
       
