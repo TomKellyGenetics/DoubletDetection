@@ -228,14 +228,14 @@ BoostClassifier <- setRefClass(
       #             enrichment of synthetic doublets. Shape (n_iters, num_cells).
       #         all_scores_ (ndarray): The fraction of a cell's cluster that is
       #             synthetic doublets. Shape (n_iters, num_cells).
-      #         communities_ (ndarray): Cluster ID for corresponding cell. Shape
+      #         communities (ndarray): Cluster ID for corresponding cell. Shape
       #             (n_iters, num_cells).
       #         labels_ (ndarray, ndims=1): 0 for singlet, 1 for detected doublet.
       #         parents_ (list of sequences of int): Parent cells' indexes for each
       #             synthetic doublet. A list wrapping the results from each run.
       #         suggested_score_cutoff_ (numeric): Cutoff used to classify cells when
       #             n_iters == 1 (scores >= cutoff). Not produced when n_iters > 1.
-      #         synth_communities_ (sequence of ints): Cluster ID for corresponding
+      #         synth_communities (sequence of ints): Cluster ID for corresponding
       #             synthetic doublet. Shape (n_iters, num_cells * boost_rate).
       #         top_var_genes_ (ndarray): Indices of the n_top_var_genes used. Not
       #             generated if n_top_var_genes <= 0.
@@ -326,7 +326,7 @@ BoostClassifier <- setRefClass(
       #             raw_counts (array-like): Count matrix, oriented cells by genes.
       # 
       #         Sets:
-      #             all_scores_, all_p_values_, communities_, top_var_genes, parents,
+      #             all_scores_, all_p_values_, communities, top_var_genes, parents,
       #             synth_communities
       # 
       #         Returns:
@@ -351,7 +351,7 @@ BoostClassifier <- setRefClass(
       
       if(n_top_var_genes > 0){
         gene_variances <- apply(raw_counts, 1, var)
-        top_var_indexes <- sort(gene_variances)
+        top_var_indexes <- order(gene_variances)
         if(n_top_var_genes < nrow(raw_counts)){
           top_var_genes_ <<- top_var_indexes[1:n_top_var_genes]
           #filter to top genes
@@ -380,9 +380,9 @@ BoostClassifier <- setRefClass(
         fits <- one_fit()
         all_scores_[i,]  <<- fits$scores
         all_p_values_[i,] <<- fits$p_values
-        all_communities[i,] <- fits$communities_
+        all_communities[i,] <- fits$communities
         all_parents[[i]] <- fits$parents_
-        all_synth_communities[i,] <- fits$synth_communities_
+        all_synth_communities[i,] <- fits$synth_communities
       }
       # Release unneeded large data vars
       #rm(raw_counts, norm_counts, rawsynthetics, synthetics)
@@ -444,9 +444,9 @@ BoostClassifier <- setRefClass(
       
       aug_counts <- cbind(raw_counts, rawsynthetics) #combine raw_counts and synthetic doublets
       gene_counts <- apply(aug_counts, 1, sum)
-      if(all(gene_counts == 0)){
+      if(any(gene_counts == 0)){
         aug_counts <- aug_counts[apply(aug_counts, 1, sum) != 0,] #remove genes with zero total counts
-        warning(paste(sum(all(gene_counts == 0), "genes with zero total removed")))
+        warning(paste(sum(all(gene_counts == 0)), "genes with zero total removed"))
       }
       aug_counts <- normalizer(aug_counts) #normalise combined ataset
       
@@ -461,8 +461,8 @@ BoostClassifier <- setRefClass(
       print("Clustering augmented data set with Phenograph...")
       fullcommunities <- Rphenograph(reduced_counts, k = n_components, prune = phenograph_parameters$prune)
       min_ID <- min(sizes(fullcommunities[[2]]))
-      communities_ <- membership(fullcommunities[[2]])[1:num_cells]
-      synth_communities_ <- membership(fullcommunities[[2]])[(num_cells + 1):length(membership(fullcommunities[[2]]))]
+      communities <- membership(fullcommunities[[2]])[1:num_cells]
+      synth_communities <- membership(fullcommunities[[2]])[(num_cells + 1):length(membership(fullcommunities[[2]]))]
       community_sizes <- sizes(fullcommunities[[2]])
       
       for(ii in 1:length(community_sizes)){
@@ -471,25 +471,25 @@ BoostClassifier <- setRefClass(
       
       # Count number of fake doublets in each community and assign score
       # Number of synth/orig cells in each cluster.
-      orig_cells_per_comm <- table(communities_)
+      orig_cells_per_comm <- table(communities)
       community_IDs <- names(orig_cells_per_comm)
-      synth_cells_per_comm <- table(synth_communities_)
+      synth_cells_per_comm <- table(synth_communities)
       synth_cells_per_comm <- as.table(ifelse(community_IDs %in% names(synth_cells_per_comm), synth_cells_per_comm[match(community_IDs, names(synth_cells_per_comm))], 0))
       names(synth_cells_per_comm)<- community_IDs 
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
-      scores <- sapply(1:length(community_IDs), function(i) community_scores[i])
+      scores <- community_scores[communities]
       community_p_values <- sapply(1:length(community_IDs), function(i){
         phyper(synth_cells_per_comm[i], nrow(aug_counts), nrow(synthetics), synth_cells_per_comm[i] + orig_cells_per_comm[i])
-      })
-      p_values <- sapply(1:length(community_IDs), function(i) community_p_values[i])
+      })[communities]
+      p_values <- sapply(1:length(community_IDs), function(i) community_p_values[i])[communities]
       
       if(min_ID < 0){
-        scores[communities_ == -1] <- NA
-        p_values[communities_ == -1] <- NA
+        scores[communities == -1] <- NA
+        p_values[communities == -1] <- NA
       }
       
-      outs <- list(scores, p_values, communities_, synth_communities_, parents_)
-      names(outs) <- c("scores", "p_values", "communities_", "synth_communities_", "parents_")
+      outs <- list(scores, p_values, communities, synth_communities, parents_)
+      names(outs) <- c("scores", "p_values", "communities", "synth_communities", "parents_")
       return(outs)
     },
   downsampleCellPair = function(cell1, cell2){ #Downsample the sum of two cells' gene expression profiles.
