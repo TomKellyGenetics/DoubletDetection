@@ -475,13 +475,13 @@ BoostClassifier <- setRefClass(
       community_IDs <- names(orig_cells_per_comm)
       synth_cells_per_comm <- table(synth_communities_)
       synth_cells_per_comm <- as.table(ifelse(community_IDs %in% names(synth_cells_per_comm), synth_cells_per_comm[match(community_IDs, names(synth_cells_per_comm))], 0))
-      names(synth_cells_per_comm) <- community_IDs
+      names(synth_cells_per_comm)<- community_IDs 
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
-      scores <- sapply(1:length(communities_), function(i) community_scores[i])
-      community_p_values <- sapply(1:length(communities_), function(i){
+      scores <- sapply(1:length(community_IDs), function(i) community_scores[i])
+      community_p_values <- sapply(1:length(community_IDs), function(i){
         phyper(synth_cells_per_comm[i], nrow(aug_counts), nrow(synthetics), synth_cells_per_comm[i] + orig_cells_per_comm[i])
       })
-      p_values <- sapply(1:length(communities_), function(i) community_p_values[i])
+      p_values <- sapply(1:length(community_IDs), function(i) community_p_values[i])
       
       if(min_ID < 0){
         scores[communities_ == -1] <- NA
