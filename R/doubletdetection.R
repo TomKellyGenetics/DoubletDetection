@@ -295,8 +295,8 @@ BoostClassifier <- setRefClass(
         new_lib_as <<- max
         print(paste("function", "max", "accepted as new_lib_as"))
       } else {
-        print("no valid new_lib_as input")
-        stop("please enter NULL, TRUE, FALSE, or a valid function")
+        stop("no valid new_lib_as input
+              please enter NULL, TRUE, FALSE, or a valid function")
       }
 
       #check prune argument defined (to pass to phenograph)
@@ -305,13 +305,13 @@ BoostClassifier <- setRefClass(
       }
       phenograph_parameters <<- phenograph_parameters
       if(n_iters == 1 & phenograph_parameters$prune == TRUE){
-        warning("Using phenograph parameter prune=FALSE is strongly recommended when")
-        print("running only one iteration. Otherwise, expect many NaN labels.")
+        warning("Using phenograph parameter prune=FALSE is strongly recommended when
+                running only one iteration. Otherwise, expect many NaN labels.")
       }
       
       if(replace == FALSE & boost_rate > 0.5){
-        warning("boost_rate is trimmed to 0.5 when replace=FALSE.")
-        print("Set replace=TRUE to use greater boost rates.")
+        warning("boost_rate is trimmed to 0.5 when replace=FALSE.
+                Set replace=TRUE to use greater boost rates.")
         boost_rate <<- 0.5
       }
       
