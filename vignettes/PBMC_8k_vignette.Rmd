@@ -30,7 +30,7 @@ devtools::install_github("TomKellyGenetics/DoubletDetection", ref = "r-implement
 ### Install dependancies:
 
 ```{r, eval = FALSE}
-devtools::install_github("JinmiaoChenLab/Rphenograph")
+#devtools::install_github("JinmiaoChenLab/Rphenograph")
 devtools::install_github("TomKellyGenetics/Rphenograph")
 install.packages("hdf5r")
 install.packages("Matrix")

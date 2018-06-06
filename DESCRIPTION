@@ -19,6 +19,6 @@ Suggests:
     rmarkdown,
     testthat
 Remotes:
-    JinmiaoChenLab/Rphenograph,
+    #JinmiaoChenLab/Rphenograph,
     TomKellyGenetics/Rphenograph
 VignetteBuilder: knitr
