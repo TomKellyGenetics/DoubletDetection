@@ -414,7 +414,10 @@ BoostClassifier <- setRefClass(
       #         Returns:
       #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
       if(n_iters > 1){
-        voting_average_ <- apply(all_p_values_, 2, function(x) mean(as.numeric(x > p_thresh), na.rm = TRUE))
+        voting_average_ <- apply(all_p_values_, 2, function(x){
+          x<- ifelse(is.infinite(x), NA, x)
+          mean(as.numeric(x > p_thresh), na.rm = TRUE)
+        })
         labels_ <- ifelse(voting_average_ >= voter_thresh, 1, 0)
         voting_average_ <- ifelse(voting_average_, voting_average_, NA)
       } else{
@@ -479,7 +482,7 @@ BoostClassifier <- setRefClass(
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
       scores <- community_scores[communities]
       community_p_values <- sapply(1:length(community_IDs), function(i){
-        phyper(synth_cells_per_comm[i], nrow(aug_counts), nrow(synthetics), synth_cells_per_comm[i] + orig_cells_per_comm[i])
+        phyper(synth_cells_per_comm[i], nrow(synthetics), ncol(raw_counts), synth_cells_per_comm[i]/(synth_cells_per_comm[i] + orig_cells_per_comm[i]))
       })[communities]
       p_values <- sapply(1:length(community_IDs), function(i) community_p_values[i])[communities]
       

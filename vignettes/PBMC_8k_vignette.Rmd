@@ -1,5 +1,5 @@
 ---
-title: "Doublet Detection on 8k PBMCs from 10x Genomics"
+title: "Doublet Detection on 8k PBMCs from 10X Genomics"
 author: "Tom Kelly and Jonathon Shor"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -28,6 +28,13 @@ devtools::install_github("TomKellyGenetics/DoubletDetection", ref = "r-implement
 ```
 
 ### Install dependancies:
+
+
+```{r, include = FALSE, echo = FALSE}
+options(repos = "https://cran.stat.auckland.ac.nz/")
+```
+
+
 
 ```{r, eval = FALSE}
 #devtools::install_github("JinmiaoChenLab/Rphenograph")
@@ -72,7 +79,7 @@ matrix_path <- 'filtered_gene_bc_matrices/GRCh38/matrix.mtx'
 raw_counts <- DoubletDetection::load_mtx(matrix_path)
 # Remove columns with all 0s
 non_zero_genes <- apply(raw_counts, 1, function(x) sum(x) != 0)
-raw_counts <- raw_counts[, non_zero_genes]
+raw_counts <- raw_counts[non_zero_genes, ]
 ```
 
 ## Run Doublet Detection
@@ -109,3 +116,6 @@ f2_tsne_coords <- DoubletDetection::plot$tsne(raw_counts, doublets, save='tsne_t
 ```
 
 
+```{r, echo = FALSE, include = FALSE}
+save.image("vignette.RData")
+```
