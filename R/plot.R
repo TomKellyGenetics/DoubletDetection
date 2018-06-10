@@ -105,14 +105,14 @@ tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=Fals
       
       tsne_counts <- tsne(reduced_counts)
       
-      plot(tsne[,1], tsne[,2], col = rainbow(n_components)[communities],
+      plot(tsne[,1], tsne[,2], col = ifelse(labels, rainbow(n_components)[communities], "black"),
            main = "Cells with Detected\n Doublets in Black",
            sub = paste(sum(labels), "doublets out of", ncol(raw_counts),  "cells.\n",  round(100 * nsum(labels) / nrow(raw_counts.shape), 2),  "across-type doublet rate"),
            xaxt = "n", yaxt = "n")
   
     
       if(show){
-        plot(tsne[,1], tsne[,2], col = rainbow(n_components)[communities],
+        plot(tsne[,1], tsne[,2], col = ifelse(labels, rainbow(n_components)[communities], "black"),
              main = "Cells with Detected\n Doublets in Black",
              sub = paste(sum(labels), "doublets out of", ncol(raw_counts),  "cells.\n",  round(100 * nsum(labels) / nrow(raw_counts.shape), 2),  "across-type doublet rate"),
              xaxt = "n", yaxt = "n")
@@ -122,7 +122,7 @@ tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=Fals
           save <- save
           print(paste("Saving tSNE plot as file:", save))
           png(file = save, width = 800, height = 800)
-            plot(tsne[,1], tsne[,2], col = rainbow(n_components)[communities],
+            plot(tsne[,1], tsne[,2], col = ifelse(labels, rainbow(n_components)[communities], "black"),
                  main = "Cells with Detected\n Doublets in Black",
                  sub = paste(sum(labels), "doublets out of", ncol(raw_counts),  "cells.\n",  round(100 * nsum(labels) / nrow(raw_counts.shape), 2),  "across-type doublet rate"),
                  xaxt = "n", yaxt = "n") 
@@ -139,7 +139,7 @@ tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=Fals
             print(paste("Saving tSNE plot as file:", save))
           }
           pdf(file = save, width = 8, height = 8)
-          plot(tsne[,1], tsne[,2], col = rainbow(n_components)[communities],
+          plot(tsne[,1], tsne[,2], col = ifelse(labels, rainbow(n_components)[communities], "black"),
                main = "Cells with Detected\n Doublets in Black",
                sub = paste(sum(labels), "doublets out of", ncol(raw_counts),  "cells.\n",  round(100 * nsum(labels) / nrow(raw_counts.shape), 2),  "across-type doublet rate"),
                xaxt = "n", yaxt = "n") 
