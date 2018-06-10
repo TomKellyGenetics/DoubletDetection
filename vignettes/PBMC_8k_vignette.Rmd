@@ -104,15 +104,15 @@ print(paste("Time elapsed", end-start,"seconds,", (end-start) / clf.n_iters, clf
 
 ### Convergence of Doublet Calls
 
-```{r, eval = FALSE}
-f <- DoubletDetection::plot$convergence(clf, save='convergence_test.pdf', show=TRUE)
+```{r}
+DoubletDetection::convergence(clf, save='convergence_test.pdf', show=TRUE)
 ```
 
 
 ### Doublets on tSNE map
 
-```{r, eval = FALSE}
-f2_tsne_coords <- DoubletDetection::plot$tsne(raw_counts, doublets, save='tsne_test.pdf', show=True)
+```{}
+tsne_coords <- DoubletDetection::tsne_plot(raw_counts, doublets, save='tsne_test.pdf', show=True)
 ```
 
 

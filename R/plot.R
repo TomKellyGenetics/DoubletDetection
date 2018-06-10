@@ -1,98 +1,152 @@
-# from .doubletdetection import normalize_counts
-# from sklearn.decomposition import PCA
-# from MulticoreTSNE import MulticoreTSNE as TSNE
-# import phenograph
-# 
-# import os
-# import warnings
-# import numpy as np
-# 
-# import matplotlib
-# try:
-#     os.environ['DISPLAY']
-# except KeyError:
-#     matplotlib.use('Agg')
-# import matplotlib.pyplot as plt
-# 
-# warnings.filterwarnings(
-#     action="ignore", module="matplotlib", message="^tight_layout")
-# # Ignore warning for convergence plot
-# np.warnings.filterwarnings('ignore')
-# 
-# 
-# def convergence(clf, show=False, save=None, p_thresh=0.99, voter_thresh=0.9):
-#     """Produce a plot showing number of cells called doublet per iter
-# 
-#     Args:
-#         clf (BoostClassifier object): Fitted classifier
-#         show (bool, optional): If True, runs plt.show()
-#         save (str, optional): filename for saved figure,
-#             figure not saved by default
-#         p_thresh (float, optional): hypergeometric test p-value threshold
-#             that determines per iteration doublet calls
-#         voter_thresh (float, optional): fraction of iterations a cell must
-#             be called a doublet
-# 
-#     Returns:
-#         matplotlib figure
-#     """
-#     doubs_per_run = []
-#     for i in range(clf.n_iters):
-#         cum_p_values = clf.all_p_values_[:i + 1]
-#         cum_vote_average = np.mean(
-#             np.ma.masked_invalid(cum_p_values) > p_thresh, axis=0)
-#         cum_doublets = np.ma.filled(cum_vote_average >= voter_thresh, np.nan)
-#         doubs_per_run.append(np.sum(cum_doublets))
-# 
-#     f, ax = plt.subplots(1, 1, figsize=(3, 3), dpi=200)
-#     ax.plot(np.arange(len(doubs_per_run)), doubs_per_run)
-#     ax.set_xlabel("Number of Iterations")
-#     ax.set_ylabel("Number of Predicted Doublets")
-#     ax.set_title('Predicted Doublets\n per Iteration')
-# 
-#     if show is True:
-#         plt.show()
-#     if isinstance(save, str):
-#         f.savefig(save, format='pdf', bbox_inches='tight')
-# 
-#     return f
-# 
-# 
-# def tsne(raw_counts, labels, n_components=30, n_jobs=-1, show=False, save=None):
-#     """Produce a tsne plot of the data with doublets in black
-# 
-#     Args:
-#         raw_counts (ndarray): cells by genes count matrix
-#         labels (ndarray): predicted doublets from predict method
-#         n_components (int, optional): number of PCs to use prior to TSNE
-#         n_jobs (int, optional): number of cores to use for TSNE, -1 for all
-#         show (bool, optional): If True, runs plt.show()
-#         save (str, optional): filename for saved figure,
-#             figure not saved by default
-#     Returns:
-#         matplotlib figure
-#         ndarray: tsne reduction
-#     """
-#     norm_counts = normalize_counts(raw_counts)
-#     reduced_counts = PCA(n_components=n_components,
-#                          svd_solver='randomized').fit_transform(norm_counts)
-#     communities, _, _ = phenograph.cluster(reduced_counts)
-#     tsne_counts = TSNE(n_jobs=-1).fit_transform(reduced_counts)
-# 
-#     fig, axes = plt.subplots(1, 1, figsize=(3, 3), dpi=200)
-#     axes.scatter(tsne_counts[:, 0], tsne_counts[:, 1],
-#                  c=communities, cmap=plt.cm.tab20, s=1)
-#     axes.scatter(tsne_counts[:, 0][labels], tsne_counts[:, 1]
-#                  [labels], s=3, edgecolor='k', facecolor='k')
-#     axes.set_title('Cells with Detected\n Doublets in Black')
-#     plt.xticks([])
-#     plt.yticks([])
-#     axes.set_xlabel('{} doublets out of {} cells.\n {}%  across-type doublet rate.'.format(
-#         np.sum(labels), raw_counts.shape[0], np.round(100 * np.sum(labels) / raw_counts.shape[0], 2)))
-# 
-#     if show is True:
-#         plt.show()
-#     if isinstance(save, str):
-#         fig.savefig(save, format='pdf', bbox_inches='tight')
-# 
-#     return fig, tsne_counts
+##' @name convergence
+##' @rdname plot_doublets
+##'
+##' @title Convergence plot of doublets
+##' 
+##' @description Produce a convergence plot showing number of cells called doublet per iteration
+##' 
+##' @param clf (BoostClassifier object): Fitted classifier
+##' @param show (logical, optional): If TRUE, runs plt.show()
+##' @param save (charater, optional): filename for saved figure, figure not saved by default
+##' @param p_thresh (numeric, optional): hypergeometric test p-value threshold that determines per iteration doublet calls
+##' @param voter_thresh (numeric, optional): fraction of iterations a cell must be called a doublet
+##' 
+##' @importFrom DoubletDetection normalize_counts
+##' @keywords scRNA quality filter matrix normalise doublets single-cell
+##' @export
+convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=0.9){
+    # Returns:
+    #     matplotlib figure
+    
+    doubs_per_run <- list()
+    for(i in 1:clf$n_iters){
+      cum_p_values <- clf$all_p_values_[1:i]
+      cum_vote_average <- apply(sum_p_values_, 2, function(x){
+        x <- ifelse(is.infinite(x), NA, x)
+        mean(as.numeric(x > p_thresh), na.rm = TRUE)
+      })
+      cum_doublets <- ifelse(cum_voting_average_ >= voter_thresh, 1, 0)
+      cum_voting_average_ <- ifelse(as.numeric(cum_voting_average_), cum_voting_average_, NA)
+      doubs_per_run[[i]] <- sum(cum_doublets, na.rm = TRUE)
+    }
+
+    if(show){
+      plot(1:length(doubs_per_run), doubs_per_run,
+           type = "l", col = "royalblue2",
+           main = "Predicted Doublets\n per Iteration",
+           xlab = "Number of Predicted Doublets",
+           ylab = "Number of Iterations")
+    }
+    
+    if(is.character(save)){
+      if(strsplit(save, split = "[.]")[[1]][2] == "png"){
+        save <- save
+        print(paste("Saving tSNE plot as file:", save))
+        png(file = save, width = 800, height = 800)
+          plot(1:length(doubs_per_run), doubs_per_run,
+              type = "l", col = "royalblue2",
+              main = "Predicted Doublets\n per Iteration",
+              xlab = "Number of Predicted Doublets",
+              ylab = "Number of Iterations")
+        dev.off()
+      } else {
+        if(strsplit(save, split = "[.]")[[1]][2] == "pdf"){
+          save <- save
+          print(paste("Saving tSNE plot as file:", save))
+        } else {
+          save <- strsplit(save, split = "[.]")[[1]]
+          save <- save[1:(length(save)-1)] # remove extension
+          save <- paste0(save, ".pdf")
+          warning("file extension in save changed to pdf")
+          print(paste("Saving tSNE plot as file:", save))
+        }
+        pdf(file = save, width = 8, height = 8)
+          plot(1:length(doubs_per_run), doubs_per_run,
+              type = "l", col = "royalblue2",
+              main = "Predicted Doublets\n per Iteration",
+              xlab = "Number of Predicted Doublets",
+              ylab = "Number of Iterations")
+        dev.off()
+      }
+    } else {
+      warning("Convergence plot not saved, give a valid filename for save")
+    }
+}
+##' @rdname plot_doublets
+##' 
+##' @title  tSNE Plot
+##' 
+##' @description Produce a tsne plot of the data with doublets in black
+##' 
+##' @param raw_counts (matrix): genes by cells count matrix
+##' @param labels (vector, integer): predicted doublets from predict method
+##' @param n_components (integer, optional): number of PCs to use prior to TSNE
+##' @param n_jobs (integer, optional): number of cores to use for TSNE, -1 for all
+##' @param show (logical, optional): If TRUE, runs plt.show()
+##' @param save (charater, optional): filename for saved figure, figure not saved by default
+##' @import gplots tsne
+##' 
+##' @export
+tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=False, save=None){
+      #     """Produce a tsne plot of the data with doublets in black
+      #
+      #     Returns:
+      #         matplotlib figure
+      #         ndarray: tsne reduction
+      #     """
+      norm_counts <- normalize_counts(raw_counts)
+      
+      pca <- prcomp(aug_counts, rank = n_components, center = TRUE, scale. = TRUE)$rotation
+      reduced_counts <- pca #apply(pca, 2, normalizer) #already normalized
+      
+      communities <- Rphenograph(reduced_counts, k = n_components, prune = phenograph_parameters$prune)[[2]]
+      
+      #reduced_counts <- fit_transform(reduced_counts)                     
+      
+      tsne_counts <- tsne(reduced_counts)
+      
+      plot(tsne[,1], tsne[,2], col = rainbow(n_components)[communities],
+           main = "Cells with Detected\n Doublets in Black",
+           sub = paste(sum(labels), "doublets out of", ncol(raw_counts),  "cells.\n",  round(100 * nsum(labels) / nrow(raw_counts.shape), 2),  "across-type doublet rate"),
+           xaxt = "n", yaxt = "n")
+  
+    
+      if(show){
+        plot(tsne[,1], tsne[,2], col = rainbow(n_components)[communities],
+             main = "Cells with Detected\n Doublets in Black",
+             sub = paste(sum(labels), "doublets out of", ncol(raw_counts),  "cells.\n",  round(100 * nsum(labels) / nrow(raw_counts.shape), 2),  "across-type doublet rate"),
+             xaxt = "n", yaxt = "n")
+      }
+      if(is.character(save)){
+        if(strsplit(save, split = "[.]")[[1]][2] == "png"){
+          save <- save
+          print(paste("Saving tSNE plot as file:", save))
+          png(file = save, width = 800, height = 800)
+            plot(tsne[,1], tsne[,2], col = rainbow(n_components)[communities],
+                 main = "Cells with Detected\n Doublets in Black",
+                 sub = paste(sum(labels), "doublets out of", ncol(raw_counts),  "cells.\n",  round(100 * nsum(labels) / nrow(raw_counts.shape), 2),  "across-type doublet rate"),
+                 xaxt = "n", yaxt = "n") 
+          dev.off()
+        } else {
+          if(strsplit(save, split = "[.]")[[1]][2] == "pdf"){
+            save <- save
+            print(paste("Saving tSNE plot as file:", save))
+          } else {
+            save <- strsplit(save, split = "[.]")[[1]]
+            save <- save[1:(length(save)-1)] # remove extension
+            save <- paste0(save, ".pdf")
+            warning("file extension in save changed to pdf")
+            print(paste("Saving tSNE plot as file:", save))
+          }
+          pdf(file = save, width = 8, height = 8)
+          plot(tsne[,1], tsne[,2], col = rainbow(n_components)[communities],
+               main = "Cells with Detected\n Doublets in Black",
+               sub = paste(sum(labels), "doublets out of", ncol(raw_counts),  "cells.\n",  round(100 * nsum(labels) / nrow(raw_counts.shape), 2),  "across-type doublet rate"),
+               xaxt = "n", yaxt = "n") 
+          dev.off()
+        }
+      } else {
+        warning("tSNE plot not saved, give a valid filename for save")
+      }
+      return(tsne_counts)
+}

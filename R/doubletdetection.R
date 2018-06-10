@@ -415,11 +415,11 @@ BoostClassifier <- setRefClass(
       #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
       if(n_iters > 1){
         voting_average_ <- apply(all_p_values_, 2, function(x){
-          x<- ifelse(is.infinite(x), NA, x)
+          x <- ifelse(is.infinite(x), NA, x)
           mean(as.numeric(x > p_thresh), na.rm = TRUE)
         })
         labels_ <- ifelse(voting_average_ >= voter_thresh, 1, 0)
-        voting_average_ <- ifelse(voting_average_, voting_average_, NA)
+        voting_average_ <- ifelse(as.numeric(voting_average_), voting_average_, NA)
       } else{
         # Find a cutoff score
         potential_cutoffs <- unique(all_scores_[is.na(all_scores_) == FALSE])
