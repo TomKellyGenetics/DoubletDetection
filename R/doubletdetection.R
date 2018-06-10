@@ -424,13 +424,13 @@ BoostClassifier <- setRefClass(
         # Find a cutoff score
         potential_cutoffs <- unique(all_scores_[is.na(all_scores_) == FALSE])
         if(length(potential_cutoffs) > 1){
-          dropoff <- potential_cutoffs[2:length(potential_cutoffs)] - potential_cutoffs[1:(1-length(potential_cutoffs))]
+          dropoff <- potential_cutoffs[2:length(potential_cutoffs)] - potential_cutoffs[1:(length(potential_cutoffs)-1)]
           max_dropoff <- which(dropoff == max(dropoff)) #+ 1 (not needed for 1-indexed language)
         } else {
           # Most likely pathological dataset, only one (or no) clusters
           max_dropoff <- 1
-          suggested_score_cutoff_ <- potential_cutoffs[max_dropoff]
         }
+        suggested_score_cutoff_ <- potential_cutoffs[max_dropoff]
         labels_ <- ifelse(all_scores_[1,] >= suggested_score_cutoff_, 1, 0) #Allow NA values
       }
       return(labels_)
@@ -482,10 +482,11 @@ BoostClassifier <- setRefClass(
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
       scores <- community_scores[communities]
       community_p_values <- sapply(1:length(community_IDs), function(i){
-        phyper(synth_cells_per_comm[i], nrow(synthetics), ncol(raw_counts), synth_cells_per_comm[i]/(synth_cells_per_comm[i] + orig_cells_per_comm[i]))
+        dhyper(synth_cells_per_comm[i], nrow(synthetics), nrow(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i])
       })[communities]
       p_values <- sapply(1:length(community_IDs), function(i) community_p_values[i])[communities]
       
+    
       if(min_ID < 0){
         scores[communities == -1] <- NA
         p_values[communities == -1] <- NA
