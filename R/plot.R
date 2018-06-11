@@ -11,7 +11,6 @@
 ##' @param p_thresh (numeric, optional): hypergeometric test p-value threshold that determines per iteration doublet calls
 ##' @param voter_thresh (numeric, optional): fraction of iterations a cell must be called a doublet
 ##' 
-##' @importFrom DoubletDetection normalize_counts
 ##' @keywords scRNA quality filter matrix normalise doublets single-cell
 ##' @export
 convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=0.9){
@@ -84,7 +83,7 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
 ##' @param n_jobs (integer, optional): number of cores to use for TSNE, -1 for all
 ##' @param show (logical, optional): If TRUE, runs plt.show()
 ##' @param save (charater, optional): filename for saved figure, figure not saved by default
-##' @import gplots tsne
+##' @import gplots Rtsne Rcpp
 ##' 
 ##' @export
 tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=False, save=None){
@@ -103,7 +102,7 @@ tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=Fals
       
       #reduced_counts <- fit_transform(reduced_counts)                     
       
-      tsne_counts <- tsne(reduced_counts)
+      tsne_counts <- Rtsne(reduced_counts)
       
       plot(tsne[,1], tsne[,2], col = ifelse(labels, rainbow(n_components)[communities], "black"),
            main = "Cells with Detected\n Doublets in Black",

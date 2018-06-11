@@ -15,7 +15,8 @@ Depends:
     stats,
     Rphenograph,
     gplots,
-    tsne
+    Rtsne,
+    Rcpp
 Suggests:
     knitr,
     rmarkdown,
