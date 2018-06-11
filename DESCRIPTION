@@ -13,7 +13,9 @@ Depends:
     hdf5r,
     Matrix,
     stats,
-    Rphenograph
+    Rphenograph,
+    gplots,
+    tsne
 Suggests:
     knitr,
     rmarkdown,
