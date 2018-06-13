@@ -30,11 +30,13 @@ To run basic doublet classification:
 ```
 library("DoubletDetection")
 clf <- BoostClassifier$new()
-# raw_counts is a cells by genes count matrix
+# raw_counts is a genes by cells count matrix
 labels = clf$fit(raw_counts)$predict()
 ```
 
-`raw_counts` is a scRNA-seq count matrix (cells by genes) or data.frame. `labels` is a binary numerical vector with the value 1 representing a 
+`raw_counts` is a scRNA-seq count matrix or data.frame (genes x cells).
+Note that the dimensions of input matrix differs from the Python version.
+ `labels` is a binary numerical vector with the value 1 representing a 
 detected doublet.
 
 # Usage
