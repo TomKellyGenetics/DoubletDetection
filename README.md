@@ -10,6 +10,11 @@ Contributions to the R implementation via pull request are welcome.
 
 ## Version 2.1.0
 
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/vioplot)](https://cran.r-project.org/package=DoubletDetection)
+[![Travis Build Status](https://travis-ci.org/TomKellyGenetics/vioplot.svg?branch=master)](https://travis-ci.org/TomKellyGenetics/DoubletDetection)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/TomKellyGenetics/vioplot?branch=master&svg=true)](https://ci.appveyor.com/project/TomKellyGenetics/DoubletDetection)
+
+
 DoubletDetection is an R implementation of a package to detect doublets (technical errors) in single-cell RNA-seq count matrices.
 
 ## Installation
