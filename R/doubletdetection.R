@@ -449,7 +449,7 @@ BoostClassifier <- setRefClass(
       gene_counts <- apply(aug_counts, 1, sum)
       if(any(gene_counts == 0)){
         aug_counts <- aug_counts[apply(aug_counts, 1, sum) != 0,] #remove genes with zero total counts
-        warning(paste(sum(all(gene_counts == 0)), "genes with zero total removed"))
+        warning(paste(sum(gene_counts == 0), "genes with zero total removed:", sum(gene_counts != 0), "genes remaining"))
       }
       aug_counts <- normalizer(aug_counts) #normalise combined ataset
       
@@ -458,8 +458,9 @@ BoostClassifier <- setRefClass(
       
       print("Running PCA...")
       # Get phenograph results
-      pca <- prcomp(aug_counts, rank = n_components, center = TRUE, scale. = TRUE)$rotation
-      reduced_counts <- pca #apply(pca, 2, normalizer) #already normalized
+      pca <- prcomp(t(aug_counts), rank = n_components, center = TRUE, scale. = TRUE)$x
+      #pca <- normalizer(t(pca))
+      reduced_counts <- pca[, 1:min(n_components, ncol(pca))]
       
       print("Clustering augmented data set with Phenograph...")
       fullcommunities <- Rphenograph(reduced_counts, k = n_components, prune = phenograph_parameters$prune)
@@ -482,7 +483,7 @@ BoostClassifier <- setRefClass(
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
       scores <- community_scores[communities]
       community_p_values <- sapply(1:length(community_IDs), function(i){
-        dhyper(synth_cells_per_comm[i], nrow(synthetics), nrow(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i])
+        phyper(synth_cells_per_comm[i], nrow(synthetics), nrow(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i])
       })[communities]
       p_values <- sapply(1:length(community_IDs), function(i) community_p_values[i])[communities]
       
@@ -540,7 +541,7 @@ BoostClassifier <- setRefClass(
       row1 <- parent_pair[1]
       row2 <- parent_pair[2]
       if(!(is.null(new_lib_as))){
-        print(paste("running dowsamplePair for synthetic cell", i))
+        print(paste("running downsamplePair for synthetic cell", i))
         new_row <- downsampleCellPair(raw_counts[,row1], raw_counts[,row2])
       } else {
         new_row <- raw_counts[,row1] + raw_counts[,row2]
