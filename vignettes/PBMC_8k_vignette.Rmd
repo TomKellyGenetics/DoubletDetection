@@ -86,7 +86,7 @@ raw_counts <- raw_counts[non_zero_genes, ]
 
 Right now, phenograph is a bit talkative, so we suppress the output to avoid lots of text:
 
-```{r, include = FALSE, eval=FALSE}
+```{r, include = FALSE}
 #initialise BoostClassifier Reference Class (with analysis parameters)
 clf <- DoubletDetection::BoostClassifier$new(n_iters=50)
  
@@ -95,12 +95,6 @@ start <- Sys.time()
 doublets <- clf$fit(raw_counts)$predict()
 end <- Sys.time()
 ```
-```{r, echo = FALSE, include = FALSE}
-load("labels.RData")
-doublets <- labels
-rm(labels)
-```
-
 
 ```{r}
 print(paste("Time elapsed", end-start,"seconds,", (end-start) / clf.n_iters, clf.n_iters), "sec/iteration, for", n_inters, "iterations")
