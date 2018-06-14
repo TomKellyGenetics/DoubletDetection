@@ -21,6 +21,9 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
+LinkingTo: RcppMLPACK
 Remotes:
     TomKellyGenetics/Rphenograph
 VignetteBuilder: knitr
+LinkingTo: Rcpp
+Imports: Rcpp
