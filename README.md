@@ -66,8 +66,8 @@ Data can be downloaded from the [10x website](https://support.10xgenomics.com/si
 
 Please cite the R implementation as an R package using `citation(DoubletDetection)`.
 
->Adam Gayoso, S. Thomas Kelly, and Jonathan Shor (2018). DoubletDetection: a package to detect
-doublets (technical errors) in single-cell RNA-seq count matrices. R package version 0.1.0.9001
+>Adam J. Gayoso, Jonathan D. Shor, Ambrose J. Carr, and S. Thomas Kelly (2018). DoubletDetection: a package to detect
+doublets (technical errors) in single-cell RNA-seq count matrices. R package version 2.1.0.9001
 https://github.com/TomKellyGenetics/DoubletDetection"
 
 ## Python version

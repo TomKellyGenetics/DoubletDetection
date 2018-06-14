@@ -2,12 +2,12 @@ citHeader("To cite the DoubletDetection package in publications use:")
 
 citEntry(entry = "Manual",
   title        = "DoubletDetection: a Method to detect and enable removal of doublets from single-cell RNA-sequencing data.",
-  author       = personList(as.person("Adam Gayoso"), as.person("Jonathan Shor"), as.person("Ambrose J. Carr"), as.person("S. Thomas Kelly")),
+  author       = personList(as.person("Adam J. Gayoso"), as.person("Jonathan D. Shor"), as.person("Ambrose J. Carr"), as.person("S. Thomas Kelly")),
   year         = "2018",
   note         = "R package version 2.1.0",
   url          = "https://github.com/TomKellyGenetics/DoubletDetection",
   textVersion  =
-  paste("Adam Gayoso, Jonathan Shor, Ambrose J. Carr, and S. Thomas Kelly (2018). DoubletDetection: a method to detect and enable removal of doublets from single-cell RNA-sequencing data. R package version 2.1.0",
+  paste("Adam J. Gayoso, Jonathan D. Shor, Ambrose J. Carr, and S. Thomas Kelly (2018). DoubletDetection: a method to detect and enable removal of doublets from single-cell RNA-sequencing data. R package version 2.1.0",
          "https://github.com/TomKellyGenetics/DoubletDetection")
 )
 
