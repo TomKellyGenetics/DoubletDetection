@@ -10,10 +10,10 @@ Contributions to the R implementation via pull request are welcome.
 
 ## Version 2.1.0
 
-[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/DoubletDetection)](https://cran.r-project.org/package=DoubletDetection)
 [![Travis Build Status](https://travis-ci.org/TomKellyGenetics/DoubletDetection.svg?branch=r-implementation)](https://travis-ci.org/TomKellyGenetics/DoubletDetection)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/TomKellyGenetics/DoubletDetection?branch=r-implementation&svg=true)](https://ci.appveyor.com/project/TomKellyGenetics/DoubletDetection)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
 
 
 DoubletDetection is an R implementation of a package to detect doublets (technical errors) in single-cell RNA-seq count matrices.
