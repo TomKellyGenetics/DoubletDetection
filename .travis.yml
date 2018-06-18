@@ -10,6 +10,7 @@ before_install:
 
 r_packages:
   - covr
+  - hdf5r
 
 after_success:
   - Rscript -e 'library(covr); codecov()'
