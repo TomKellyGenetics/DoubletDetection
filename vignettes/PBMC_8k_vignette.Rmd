@@ -61,7 +61,7 @@ library("DoubletDetection")
 
 ## Download Data from 10X Genomics
 
-These commands will be called from R in Linus and Mac systems. The files will need to be downloaded from the given url (into the working directory) in Windows.
+These commands will be called from R in Linux and Mac systems. The files will need to be downloaded from the given url (into the working directory) in Windows.
 
 ```{r}
 #download files
