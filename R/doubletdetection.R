@@ -483,7 +483,7 @@ BoostClassifier <- setRefClass(
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
       scores <- community_scores[communities]
       community_p_values <- sapply(1:length(community_IDs), function(i){
-        dhyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i])
+        phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i])
       })
       p_values <- community_p_values[communities]
       
