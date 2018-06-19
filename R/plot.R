@@ -26,15 +26,16 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
       })
       cum_doublets <- ifelse(cum_voting_average_ >= voter_thresh, 1, 0)
       cum_voting_average_ <- ifelse(as.numeric(cum_voting_average_), cum_voting_average_, NA)
-      doubs_per_run[[i]] <- sum(cum_doublets, na.rm = TRUE)
+      doubs_per_run[[i]] <- cum_doublets
     }
 
     if(show){
       plot(1:length(doubs_per_run), doubs_per_run,
            type = "l", col = "royalblue2",
            main = "Predicted Doublets\n per Iteration",
-           xlab = "Number of Predicted Doublets",
-           ylab = "Number of Iterations")
+           xlab = "Number of Iterations", 
+           ylab = "Number of Predicted Doublets")
+           
     }
     
     if(is.character(save)){
@@ -45,8 +46,8 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
           plot(1:length(doubs_per_run), doubs_per_run,
               type = "l", col = "royalblue2",
               main = "Predicted Doublets\n per Iteration",
-              xlab = "Number of Predicted Doublets",
-              ylab = "Number of Iterations")
+              xlab = "Number of Iterations", 
+              ylab = "Number of Predicted Doublets")
         dev.off()
       } else {
         if(strsplit(save, split = "[.]")[[1]][2] == "pdf"){
@@ -63,8 +64,8 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
           plot(1:length(doubs_per_run), doubs_per_run,
               type = "l", col = "royalblue2",
               main = "Predicted Doublets\n per Iteration",
-              xlab = "Number of Predicted Doublets",
-              ylab = "Number of Iterations")
+              xlab = "Number of Iterations", 
+              ylab = "Number of Predicted Doublets")
         dev.off()
       }
     } else {
