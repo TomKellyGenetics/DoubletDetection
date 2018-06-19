@@ -71,6 +71,7 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
     } else {
       warning("Convergence plot not saved, give a valid filename for save")
     }
+    return(doubs_per_run)
 }
 ##' @rdname plot_doublets
 ##' 
