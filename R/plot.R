@@ -19,8 +19,8 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
     
     doubs_per_run <- list()
     for(i in 1:clf$n_iters){
-      cum_p_values_ <- clf$all_p_values_[1:i]
-      cum_voting_average_ <- lapply(cum_p_values_, function(x) {
+      cum_p_values_ <- matrix(all_p_values_[1:i,], i, ncol(all_p_values_))
+      cum_voting_average_ <- apply(cum_p_values_, 2, function(x) {
         x <- ifelse(is.infinite(x), NA, x)
         mean(as.numeric(x > p_thresh), na.rm = TRUE)
       })
