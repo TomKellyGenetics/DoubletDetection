@@ -26,7 +26,7 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
       })
       cum_doublets <- ifelse(cum_voting_average_ >= voter_thresh, 1, 0)
       cum_voting_average_ <- ifelse(as.numeric(cum_voting_average_), cum_voting_average_, NA)
-      doubs_per_run[[i]] <- cum_doublets
+      doubs_per_run[[i]] <- sum(cum_doublets, na.rm = T)
     }
 
     if(show){
