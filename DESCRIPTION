@@ -23,4 +23,5 @@ Suggests:
     testthat
 Remotes:
     TomKellyGenetics/Rphenograph
+    TomKellyGenetics/heatmap.2x
 VignetteBuilder: knitr
