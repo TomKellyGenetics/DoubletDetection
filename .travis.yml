@@ -4,4 +4,13 @@ language: R
 sudo: false
 cache: packages
 before_install:
+  - sudo apt-get update
   - sudo apt-get install -y libhdf5-dev
+  - h5cc -showconfig
+
+r_packages:
+  - covr
+  - hdf5r
+
+after_success:
+  - Rscript -e 'library(covr); codecov()'

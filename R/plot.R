@@ -19,22 +19,23 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
     
     doubs_per_run <- list()
     for(i in 1:clf$n_iters){
-      cum_p_values <- clf$all_p_values_[1:i]
-      cum_vote_average <- apply(sum_p_values_, 2, function(x){
+      cum_p_values_ <- matrix(clf$all_p_values_[1:i,], i, ncol(clf$all_p_values_))
+      cum_voting_average_ <- apply(cum_p_values_, 2, function(x) {
         x <- ifelse(is.infinite(x), NA, x)
         mean(as.numeric(x > p_thresh), na.rm = TRUE)
       })
       cum_doublets <- ifelse(cum_voting_average_ >= voter_thresh, 1, 0)
       cum_voting_average_ <- ifelse(as.numeric(cum_voting_average_), cum_voting_average_, NA)
-      doubs_per_run[[i]] <- sum(cum_doublets, na.rm = TRUE)
+      doubs_per_run[[i]] <- sum(cum_doublets, na.rm = T)
     }
 
     if(show){
       plot(1:length(doubs_per_run), doubs_per_run,
            type = "l", col = "royalblue2",
            main = "Predicted Doublets\n per Iteration",
-           xlab = "Number of Predicted Doublets",
-           ylab = "Number of Iterations")
+           xlab = "Number of Iterations", 
+           ylab = "Number of Predicted Doublets")
+           
     }
     
     if(is.character(save)){
@@ -45,8 +46,8 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
           plot(1:length(doubs_per_run), doubs_per_run,
               type = "l", col = "royalblue2",
               main = "Predicted Doublets\n per Iteration",
-              xlab = "Number of Predicted Doublets",
-              ylab = "Number of Iterations")
+              xlab = "Number of Iterations", 
+              ylab = "Number of Predicted Doublets")
         dev.off()
       } else {
         if(strsplit(save, split = "[.]")[[1]][2] == "pdf"){
@@ -63,13 +64,14 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.99, voter_thresh=
           plot(1:length(doubs_per_run), doubs_per_run,
               type = "l", col = "royalblue2",
               main = "Predicted Doublets\n per Iteration",
-              xlab = "Number of Predicted Doublets",
-              ylab = "Number of Iterations")
+              xlab = "Number of Iterations", 
+              ylab = "Number of Predicted Doublets")
         dev.off()
       }
     } else {
       warning("Convergence plot not saved, give a valid filename for save")
     }
+    return(doubs_per_run)
 }
 ##' @rdname plot_doublets
 ##' 
