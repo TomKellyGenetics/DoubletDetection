@@ -494,7 +494,7 @@ BoostClassifier <- setRefClass(
       })
       community_log_p_values <- log(community_p_values)
       p_values <- community_p_values[communities] #DEPRECATED
-      log_p_values <- log(community_p_values)[communities]
+      log_p_values <- log(community_p_values + 1e-32)[communities]
       
     
       if(min_ID < 0){
