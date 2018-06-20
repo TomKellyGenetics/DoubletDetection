@@ -3,13 +3,17 @@
 \name{convergence}
 \alias{convergence}
 \alias{tsne_plot}
+\alias{threshold}
 \title{Convergence plot of doublets}
 \usage{
-convergence(clf, show = FALSE, save = NULL, p_thresh = 0.99,
+convergence(clf, show = FALSE, save = NULL, p_thresh = 0.01,
   voter_thresh = 0.9)
 
 tsne_plot(raw_counts, labels, n_components = 30L, n_jobs = -1,
-  show = False, save = None)
+  show = FALSE, save = NULL)
+
+threshold(clf, log10 = True, show = FALSE, save = NULL, p_grid = NULL,
+  voter_grid = NULL, v_step = 20, p_step = 20)
 }
 \arguments{
 \item{clf}{(BoostClassifier object): Fitted classifier}
@@ -30,6 +34,24 @@ tsne_plot(raw_counts, labels, n_components = 30L, n_jobs = -1,
 
 \item{n_jobs}{(integer, optional): number of cores to use for TSNE, -1 for all}
 
+\item{log10}{(logical, optional): Use natural log p values if FALSE, log10 otherwise.}
+
+\item{p_grid}{(numeric vector, optional): p-value thresholds to use}
+
+\item{voter_grid}{(numeric vector, optional):  Voting thresholds to use. Defaults to c(0.3, 1.0, 0.01).}
+
+\item{v_step}{(integer, optional): number of ylabels to skip in plot}
+
+\item{p_step}{(integer, optional): number of xlabels to skip in plot}
+
+\item{show}{(logical, optional): If TRUE, runs plt.show()}
+
+\item{save}{(charater, optional): filename for saved figure, figure not saved by default}
+
+\item{clf}{(BoostClassifier object): Fitted classifier}
+
+\item{n_components}{(integer, optional): number of PCs to use prior to TSNE}
+
 \item{show}{(logical, optional): If TRUE, runs plt.show()}
 
 \item{save}{(charater, optional): filename for saved figure, figure not saved by default}
@@ -38,6 +60,8 @@ tsne_plot(raw_counts, labels, n_components = 30L, n_jobs = -1,
 Produce a convergence plot showing number of cells called doublet per iteration
 
 Produce a tsne plot of the data with doublets in black
+
+Produce a plot showing number of cells called doublet across various thresholds
 }
 \keyword{doublets}
 \keyword{filter}

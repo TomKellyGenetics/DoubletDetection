@@ -57,6 +57,6 @@ labels <- clf$fit(raw_counts)$predict()
   phenograph_parameters = list(prune = TRUE), n_iters = 25L,
   normalizer = normalize_counts)}}{This method is called when you create an instance of the class.}
 
-\item{\code{predict(p_thresh = 0.99, voter_thresh = 0.9)}}{Produce doublet calls from fitted classifier.}
+\item{\code{predict(p_thresh = 0.01, voter_thresh = 0.9)}}{Produce doublet calls from fitted classifier.}
 }}
 

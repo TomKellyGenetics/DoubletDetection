@@ -177,7 +177,7 @@ BoostClassifier <- setRefClass(
     rawsynthetics = "matrix",
     all_scores_ = "ANY", 
     all_p_values_ = "ANY", #DEPRECATED
-    all_log_p_values = "ANY",
+    all_log_p_values_ = "ANY",
     communities_ = "ANY",
     top_var_genes_ = "ANY",
     parents_ = "list",
@@ -330,7 +330,7 @@ BoostClassifier <- setRefClass(
       #             raw_counts (array-like): Count matrix, oriented cells by genes.
       # 
       #         Sets:
-      #             all_scores_, all_p_values_, log_all_p_values, communities, top_var_genes, parents,
+      #             all_scores_, all_p_values_, all_log_p_values, communities, top_var_genes, parents,
       #             synth_communities
       # 
       #         Returns:
@@ -374,7 +374,7 @@ BoostClassifier <- setRefClass(
       
       all_scores_ <<- matrix(0, n_iters, num_cells)
       all_p_values_ <<- matrix(0, n_iters, num_cells)
-      log_all_p_values_ <<- matrix(0, n_iters, num_cells)
+      all_log_p_values_ <<- matrix(0, n_iters, num_cells)
       all_communities <- matrix(0, n_iters, num_cells)
       
       all_parents <- list()
