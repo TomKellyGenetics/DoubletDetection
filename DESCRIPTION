@@ -22,6 +22,6 @@ Suggests:
     rmarkdown,
     testthat
 Remotes:
-    TomKellyGenetics/Rphenograph
+    TomKellyGenetics/Rphenograph,
     TomKellyGenetics/heatmap.2x
 VignetteBuilder: knitr
