@@ -8,7 +8,7 @@ Contributions to the R implementation via pull request are welcome.
 
 # DoubletDetection
 
-## Version 2.1.0
+## Version 2.3.0
 
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/DoubletDetection)](https://cran.r-project.org/package=DoubletDetection)
 [![Travis Build Status](https://travis-ci.org/TomKellyGenetics/DoubletDetection.svg?branch=r-implementation)](https://travis-ci.org/TomKellyGenetics/DoubletDetection)
@@ -43,8 +43,11 @@ labels = clf$fit(raw_counts)$predict()
 
 `raw_counts` is a scRNA-seq count matrix or data.frame (genes x cells).
 Note that the dimensions of input matrix differs from the Python version.
- `labels` is a binary numerical vector with the value 1 representing a 
-detected doublet.
+
+ `labels` is a binary numerical vector with the value `1` representing a 
+detected doublet, `0` a singlet, and `NA` an ambiguous cell.
+
+The classifier works best when there are several cell types present in the data. Furthermore, it should be applied individually to each run in an aggregated count matrix.
 
 # Usage
 

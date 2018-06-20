@@ -176,7 +176,8 @@ BoostClassifier <- setRefClass(
     num_cells = "numeric",
     rawsynthetics = "matrix",
     all_scores_ = "ANY", 
-    all_p_values_ = "ANY",
+    all_p_values_ = "ANY", #DEPRECATED
+    all_log_p_values = "ANY",
     communities_ = "ANY",
     top_var_genes_ = "ANY",
     parents_ = "list",
@@ -225,7 +226,10 @@ BoostClassifier <- setRefClass(
       # 
       #     Attributes:
       #         all_p_values_ (ndarray): Hypergeometric test p-value per cell for cluster
-      #             enrichment of synthetic doublets. Shape (n_iters, num_cells).
+      #             enrichment of synthetic doublets. Shape (n_iters, num_cells). Due to rounding point errors,
+      #             use of all_log_p_values recommended. Will be removed in v3.0.
+      #         all_log_p_values_ (ndarray): Hypergeometric test natural log p-value per
+      #            cell for cluster enrichment of synthetic doublets. Shape (n_iters,num_cells).
       #         all_scores_ (ndarray): The fraction of a cell's cluster that is
       #             synthetic doublets. Shape (n_iters, num_cells).
       #         communities (ndarray): Cluster ID for corresponding cell. Shape
@@ -326,7 +330,7 @@ BoostClassifier <- setRefClass(
       #             raw_counts (array-like): Count matrix, oriented cells by genes.
       # 
       #         Sets:
-      #             all_scores_, all_p_values_, communities, top_var_genes, parents,
+      #             all_scores_, all_p_values_, log_all_p_values, communities, top_var_genes, parents,
       #             synth_communities
       # 
       #         Returns:
@@ -370,6 +374,7 @@ BoostClassifier <- setRefClass(
       
       all_scores_ <<- matrix(0, n_iters, num_cells)
       all_p_values_ <<- matrix(0, n_iters, num_cells)
+      log_all_p_values_ <<- matrix(0, n_iters, num_cells)
       all_communities <- matrix(0, n_iters, num_cells)
       
       all_parents <- list()
@@ -379,7 +384,8 @@ BoostClassifier <- setRefClass(
         print(paste0("Iteration ", i, "/", n_iters))
         fits <- one_fit()
         all_scores_[i,]  <<- fits$scores
-        all_p_values_[i,] <<- fits$p_values
+        all_p_values_[i,] <<- fits$p_values #DEPRECATED
+        all_log_p_values_[i,] <<- fits$log_p_values
         all_communities[i,] <- fits$communities
         all_parents[[i]] <- fits$parents_
         all_synth_communities[i,] <- fits$synth_communities
@@ -395,11 +401,11 @@ BoostClassifier <- setRefClass(
       parents_ <<- all_parents
       synth_communities_ <<- all_synth_communities
       
-      self <- list(all_scores_, all_p_values_, communities_, top_var_genes_, parents_, synth_communities_)
+      self <- list(all_scores_, all_p_values_, all_log_p_values_, communities_, top_var_genes_, parents_, synth_communities_)
       names(self) <- c("all_scores_", "all_p_values_", "communities_", "top_var_genes_", "parents_", "synth_communities_")
       return(.self)
     },
-    predict = function(p_thresh = 0.99, voter_thresh = 0.9){ 
+    predict = function(p_thresh = 0.01, voter_thresh = 0.9){ 
       "Produce doublet calls from fitted classifier."
       #         Args:
       #             p_thresh (numeric, optional): hypergeometric test p-value threshold
@@ -413,10 +419,11 @@ BoostClassifier <- setRefClass(
       # 
       #         Returns:
       #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
+      log_p_thres <- log(p_thresh)
       if(n_iters > 1){
-        voting_average_ <- apply(all_p_values_, 2, function(x){
+        voting_average_ <- apply(all_log_p_values_, 2, function(x){
           x <- ifelse(is.infinite(x), NA, x)
-          mean(as.numeric(x > p_thresh), na.rm = TRUE)
+          mean(as.numeric(x <= log_p_thresh), na.rm = TRUE)
         })
         labels_ <- ifelse(voting_average_ >= voter_thresh, 1, 0)
         voting_average_ <- ifelse(as.numeric(voting_average_), voting_average_, NA)
@@ -485,15 +492,18 @@ BoostClassifier <- setRefClass(
       community_p_values <- sapply(1:length(community_IDs), function(i){
         phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i])
       })
-      p_values <- community_p_values[communities]
+      community_log_p_values <- log(community_p_values)
+      p_values <- community_p_values[communities] #DEPRECATED
+      log_p_values <- log(community_p_values)[communities]
       
     
       if(min_ID < 0){
         scores[communities == -1] <- NA
-        p_values[communities == -1] <- NA
+        p_values[communities == -1] <- NA #DEPRECATED
+        log_p_values[communities == -1] <- NA
       }
       
-      outs <- list(scores, p_values, communities, synth_communities, parents_)
+      outs <- list(scores, p_values, log_p_values, communities, synth_communities, parents_)
       names(outs) <- c("scores", "p_values", "communities", "synth_communities", "parents_")
       return(outs)
     },
