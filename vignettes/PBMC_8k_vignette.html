@@ -1,0 +1,83 @@
+<h2 id="install-packages">Install packages</h2>
+<h3 id="install-package">Install package:</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="cf">if</span>(<span class="op">!</span><span class="kw">require</span>(devtools)){</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">  <span class="kw">install.packages</span>(<span class="st">&quot;devtools&quot;</span>) <span class="co"># If not already installed</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">}</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="co">#&gt; Loading required package: devtools</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&quot;TomKellyGenetics/DoubletDetection&quot;</span>, <span class="dt">ref =</span> <span class="st">&quot;r-implementation&quot;</span>)</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="co">#&gt; Downloading GitHub repo TomKellyGenetics/DoubletDetection@r-implementation</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co">#&gt; from URL https://api.github.com/repos/TomKellyGenetics/DoubletDetection/zipball/r-implementation</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="co">#&gt; Installing DoubletDetection</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="co">#&gt; Downloading GitHub repo TomKellyGenetics/Rphenograph@master</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="co">#&gt; from URL https://api.github.com/repos/TomKellyGenetics/Rphenograph/zipball/master</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="co">#&gt; Installing Rphenograph</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="co">#&gt; &#39;/opt/local/R-3.5/lib/R/bin/R&#39; --no-site-file --no-environ --no-save  \</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="co">#&gt;   --no-restore --quiet CMD INSTALL  \</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="co">#&gt;   &#39;/tmp/RtmpDpAijD/devtools6e2a30cb85fa/TomKellyGenetics-Rphenograph-456c59a&#39;  \</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15"><span class="co">#&gt;   --library=&#39;/home/tom/R/x86_64-pc-linux-gnu-library/3.5&#39;  \</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16"><span class="co">#&gt;   --install-tests</span></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="co">#&gt; &#39;/opt/local/R-3.5/lib/R/bin/R&#39; --no-site-file --no-environ --no-save  \</span></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19"><span class="co">#&gt;   --no-restore --quiet CMD INSTALL  \</span></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20"><span class="co">#&gt;   &#39;/tmp/RtmpDpAijD/devtools6e2a39c19e7e/TomKellyGenetics-DoubletDetection-c8c79b5&#39;  \</span></a>
+<a class="sourceLine" id="cb1-21" data-line-number="21"><span class="co">#&gt;   --library=&#39;/home/tom/R/x86_64-pc-linux-gnu-library/3.5&#39;  \</span></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22"><span class="co">#&gt;   --install-tests</span></a>
+<a class="sourceLine" id="cb1-23" data-line-number="23"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb1-24" data-line-number="24"><span class="co">#&gt; Installation failed: Command failed (1)</span></a></code></pre></div>
+<h3 id="install-dependancies">Install dependancies:</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">#devtools::install_github(&quot;JinmiaoChenLab/Rphenograph&quot;)</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&quot;TomKellyGenetics/Rphenograph&quot;</span>)</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">install.packages</span>(<span class="st">&quot;hdf5r&quot;</span>)</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="kw">install.packages</span>(<span class="st">&quot;Matrix&quot;</span>)</a></code></pre></div>
+<h3 id="install-hdf5-if-needed">Install hdf5 (if needed)</h3>
+<p>OS X (using Homebrew) <code>brew install hdf5</code></p>
+<p>Debian-based systems (including Ubuntu) <code>sudo apt-get install libhdf5-dev</code></p>
+<p>Systems supporting yum and RPMs <code>sudo yum install hdf5-devel</code></p>
+<p>HDF5 1.8.14 has been pre-compiled for Windows and is available at https://github.com/mannau/h5-libwin</p>
+<h3 id="load-package-and-dependancies">load package (and dependancies)</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">library</span>(<span class="st">&quot;DoubletDetection&quot;</span>)</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="co">#&gt; Loading required package: Matrix</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="co">#&gt; Loading required package: Rphenograph</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="co">#&gt; Loading required package: ggplot2</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="co">#&gt; Loading required package: igraph</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7"><span class="co">#&gt; Attaching package: &#39;igraph&#39;</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="co">#&gt; The following objects are masked from &#39;package:stats&#39;:</span></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10"><span class="co">#&gt;     decompose, spectrum</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11"><span class="co">#&gt; The following object is masked from &#39;package:base&#39;:</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13"><span class="co">#&gt;     union</span></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14"><span class="co">#&gt; Error: package or namespace load failed for &#39;Rphenograph&#39; in library.dynam(lib, package, package.lib):</span></a>
+<a class="sourceLine" id="cb3-15" data-line-number="15"><span class="co">#&gt;  shared object &#39;Rphenograph.so&#39; not found</span></a>
+<a class="sourceLine" id="cb3-16" data-line-number="16"><span class="co">#&gt; Error: package &#39;Rphenograph&#39; could not be loaded</span></a></code></pre></div>
+<h2 id="download-data-from-10x-genomics">Download Data from 10X Genomics</h2>
+<p>These commands will be called from R in Linux and Mac systems. The files will need to be downloaded from the given url (into the working directory) in Windows.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co">#download files</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="cf">if</span>(<span class="op">!</span>(<span class="kw">file.exists</span>(<span class="st">&quot;pbmc8k_filtered_gene_bc_matrices.tar.gz&quot;</span>))){</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">  <span class="kw">system</span>(<span class="st">&quot;wget http://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_filtered_gene_bc_matrices.tar.gz&quot;</span>)</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">  <span class="co">#extract compressed files </span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">  <span class="co">#system(&quot;tar -xvzf pbmc8k_filtered_gene_bc_matrices.tar.gz&quot;)</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">}</a></code></pre></div>
+<h2 id="load-counts-matrix">Load Counts Matrix</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">matrix_path &lt;-<span class="st"> &#39;filtered_gene_bc_matrices/GRCh38/matrix.mtx&#39;</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">raw_counts &lt;-<span class="st"> </span>DoubletDetection<span class="op">::</span><span class="kw">load_mtx</span>(matrix_path)</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="co">#&gt; Error in library.dynam(lib, package, package.lib): shared object &#39;Rphenograph.so&#39; not found</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="co"># Remove columns with all 0s</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">non_zero_genes &lt;-<span class="st"> </span><span class="kw">apply</span>(raw_counts, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="kw">sum</span>(x) <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="co">#&gt; Error in apply(raw_counts, 1, function(x) sum(x) != 0): object &#39;raw_counts&#39; not found</span></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">raw_counts &lt;-<span class="st"> </span>raw_counts[non_zero_genes, ]</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="co">#&gt; Error in eval(expr, envir, enclos): object &#39;raw_counts&#39; not found</span></a></code></pre></div>
+<h2 id="run-doublet-detection">Run Doublet Detection</h2>
+<p>Right now, phenograph is a bit talkative, so we suppress the output to avoid lots of text:</p>
+<pre><code>#&gt; Error in library.dynam(lib, package, package.lib): shared object &#39;Rphenograph.so&#39; not found
+#&gt; Error in eval(expr, envir, enclos): object &#39;clf&#39; not found</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&quot;Time elapsed&quot;</span>, end<span class="op">-</span>start,<span class="st">&quot;seconds,&quot;</span>, (end<span class="op">-</span>start) <span class="op">/</span><span class="st"> </span>clf.n_iters, clf.n_iters), <span class="st">&quot;sec/iteration, for&quot;</span>, n_inters, <span class="st">&quot;iterations&quot;</span>)</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="co">#&gt; Error in paste(&quot;Time elapsed&quot;, end - start, &quot;seconds,&quot;, (end - start)/clf.n_iters, : object &#39;clf.n_iters&#39; not found</span></a></code></pre></div>
+<h2 id="visualize-results">Visualize Results</h2>
+<h3 id="convergence-of-doublet-calls">Convergence of Doublet Calls</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1">DoubletDetection<span class="op">::</span><span class="kw">convergence</span>(clf, <span class="dt">save=</span><span class="st">&#39;convergence_test.pdf&#39;</span>, <span class="dt">show=</span><span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co">#&gt; Error in library.dynam(lib, package, package.lib): shared object &#39;Rphenograph.so&#39; not found</span></a></code></pre></div>
+<h3 id="doublets-on-tsne-map">Doublets on tSNE map</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">tsne_coords &lt;-<span class="st"> </span>DoubletDetection<span class="op">::</span><span class="kw">tsne_plot</span>(raw_counts, doublets, <span class="dt">save=</span><span class="st">&#39;tsne_test.pdf&#39;</span>, <span class="dt">show=</span>True)</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="co">#&gt; Error in library.dynam(lib, package, package.lib): shared object &#39;Rphenograph.so&#39; not found</span></a></code></pre></div>
