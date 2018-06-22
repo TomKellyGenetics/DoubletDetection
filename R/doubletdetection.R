@@ -491,7 +491,7 @@ BoostClassifier <- setRefClass(
       scores <- community_scores[communities]
       community_p_values <- sapply(1:length(community_IDs), function(i){
         phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE)
-      })
+      })  #DEPRECATED
       community_log_p_values <- sapply(1:length(community_IDs), function(i){
         phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE, log.p = TRUE)
       })
