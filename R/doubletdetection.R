@@ -402,7 +402,7 @@ BoostClassifier <- setRefClass(
       synth_communities_ <<- all_synth_communities
       
       self <- list(all_scores_, all_p_values_, all_log_p_values_, communities_, top_var_genes_, parents_, synth_communities_)
-      names(self) <- c("all_scores_", "all_p_values_", "communities_", "top_var_genes_", "parents_", "synth_communities_")
+      names(self) <- c("all_scores_", "all_p_values_", "all_log_p_values_", "communities_", "top_var_genes_", "parents_", "synth_communities_")
       return(.self)
     },
     predict = function(p_thresh = 0.01, voter_thresh = 0.9){ 
@@ -419,14 +419,14 @@ BoostClassifier <- setRefClass(
       # 
       #         Returns:
       #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
-      log_p_thres <- log(p_thresh)
+      log_p_thresh <- log(p_thresh)
       if(n_iters > 1){
         voting_average_ <- apply(all_log_p_values_, 2, function(x){
           x <- ifelse(is.infinite(x), NA, x)
           mean(as.numeric(x <= log_p_thresh), na.rm = TRUE)
         })
         labels_ <- ifelse(voting_average_ >= voter_thresh, 1, 0)
-        voting_average_ <- ifelse(as.numeric(voting_average_), voting_average_, NA)
+        voting_average_ <- ifelse(is.numeric(voting_average_), voting_average_, NA)
       } else{
         # Find a cutoff score
         potential_cutoffs <- unique(sort(all_scores_[is.na(all_scores_) == FALSE], decreasing = TRUE))
@@ -490,12 +490,13 @@ BoostClassifier <- setRefClass(
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
       scores <- community_scores[communities]
       community_p_values <- sapply(1:length(community_IDs), function(i){
-        phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i])
+        phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE)
       })
-      community_log_p_values <- log(community_p_values)
+      community_log_p_values <- sapply(1:length(community_IDs), function(i){
+        phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE, log.p = TRUE)
+      })
       p_values <- community_p_values[communities] #DEPRECATED
-      log_p_values <- log(community_p_values + 1e-32)[communities]
-      
+      log_p_values <- community_log_p_values[communities]
     
       if(min_ID < 0){
         scores[communities == -1] <- NA
@@ -504,7 +505,7 @@ BoostClassifier <- setRefClass(
       }
       
       outs <- list(scores, p_values, log_p_values, communities, synth_communities, parents_)
-      names(outs) <- c("scores", "p_values", "communities", "synth_communities", "parents_")
+      names(outs) <- c("scores", "p_values", "log_p_values", "communities", "synth_communities", "parents_")
       return(outs)
     },
   downsampleCellPair = function(cell1, cell2){ #Downsample the sum of two cells' gene expression profiles.
