@@ -129,7 +129,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @rdname BoostClassifier
 ##' @title Classifier for doublets in single-cell RNA-seq data
 ##' 
-##' @import Matrix stats Rphenograph
+##' @import Matrix stats Rphenograph igraph
 ##' 
 ##' @export
 ##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
