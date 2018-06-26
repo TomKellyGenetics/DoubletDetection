@@ -17,16 +17,16 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.01, voter_thresh=
     # Returns:
     #     matplotlib figure
     
-    log_p_thres <- log10(p_thresh)
+    log_p_thres <- log(p_thresh)
     doubs_per_run <- list()
     for(i in 1:clf$n_iters){
       cum_log_p_values_ <- matrix(clf$all_log_p_values_[1:i,], i, ncol(clf$all_log_p_values_))
       cum_voting_average_ <- apply(cum_log_p_values_, 2, function(x) {
         x <- ifelse(is.infinite(x), NA, x)
-        mean(as.numeric(x <= p_thresh), na.rm = TRUE)
+        mean(as.numeric(x <= log_p_thresh), na.rm = TRUE)
       })
       cum_doublets <- ifelse(cum_voting_average_ >= voter_thresh, 1, 0)
-      cum_voting_average_ <- ifelse(as.numeric(cum_voting_average_), cum_voting_average_, NA)
+      cum_voting_average_ <- ifelse(is.numeric(cum_voting_average_), cum_voting_average_, NA)
       doubs_per_run[[i]] <- sum(cum_doublets, na.rm = T)
     }
 
@@ -98,7 +98,7 @@ tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=FALS
       #     """
       norm_counts <- normalize_counts(raw_counts)
       
-      pca <- prcomp(aug_counts, rank = n_components, center = TRUE, scale. = TRUE)$rotation
+      pca <- prcomp(norm_counts, rank = n_components, center = TRUE, scale. = TRUE)$rotation
       reduced_counts <- pca #apply(pca, 2, normalizer) #already normalized
       
       communities <- Rphenograph(reduced_counts, k = n_components, prune = phenograph_parameters$prune)[[2]]
