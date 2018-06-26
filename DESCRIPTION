@@ -11,6 +11,9 @@ LazyData: true
 RoxygenNote: 6.0.1
 biocViews:
 Depends:
+    heatmap.2x,
+    Rcpp,
+    hdf5r,
     igraph,
     Matrix,
     stats,
@@ -18,8 +21,6 @@ Depends:
     gplots,
     Rtsne,
 Suggests:
-    Rcpp,
-    hdf5r,
     knitr,
     rmarkdown,
     testthat
