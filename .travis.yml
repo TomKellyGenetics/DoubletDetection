@@ -19,7 +19,7 @@ r_packages:
 # enable remotes
 r_github_packages:
 - TomKellyGenetics/Rphenograph
-- TomKellyGenetics/heatmap.2
+- TomKellyGenetics/heatmap.2x
 
 after_success:
   - Rscript -e 'library(covr); codecov()'
