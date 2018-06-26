@@ -16,5 +16,10 @@ r_packages:
   - covr
   - hdf5r
 
+# enable remotes
+r_github_packages:
+- TomKellyGenetics/Rphenograph
+- TomKellyGenetics/heatmap.2
+
 after_success:
   - Rscript -e 'library(covr); codecov()'
