@@ -13,6 +13,8 @@ addons:
   apt:
     update: true
 
+use_bioc: true
+
 r_packages:
   - covr
   - hdf5r
