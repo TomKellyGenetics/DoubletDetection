@@ -8,6 +8,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install -y libhdf5-dev
   - h5cc -showconfig
+  - Rscript -e 'source("https://bioconductor.org/biocLite.R");biocLite(c("multtest", "survival", "MASS"), ask = FALSE)'
 addons:
   apt:
     update: true
