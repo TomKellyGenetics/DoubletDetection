@@ -87,6 +87,8 @@ convergence <- function(clf, show=FALSE, save=NULL, p_thresh=0.01, voter_thresh=
 ##' @param show (logical, optional): If TRUE, runs plt.show()
 ##' @param save (charater, optional): filename for saved figure, figure not saved by default
 ##' @import gplots Rtsne Rcpp
+##' @importFrom graphics mtext plot title
+##' @importFrom grDevices dev.off pdf png rainbow
 ##' 
 ##' @export
 tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=FALSE, save=NULL){

@@ -40,7 +40,9 @@ normalize_counts <- function(raw_counts, pseudocount=0.1){
 ##' @description Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
 ##' 
 ##' @param file character: path to mtx file
-##' @import Matrix
+##' @importFrom Matrix readMM
+##' @importFrom utils read.table
+##' @importClassesFrom Matrix dgCMatrix CsparseMatrix
 ##' 
 ##' @export
 load_mtx <- function(file){
@@ -75,7 +77,11 @@ load_mtx <- function(file){
 ##' 
 ##' @param file character: path to H5 file
 ##' @param genome character: path to top level H5 group
-##' @import hdf5r Matrix
+##' @param barcode_filtered logical: whether to use the filtered (TRUE) or raw (FALSE) gene-barcode matrix. Defaults to using filtered gene-barcode matrices.
+##' 
+##' @import hdf5r
+##' @importFrom Matrix readMM
+##' @importClassesFrom Matrix dgCMatrix CsparseMatrix
 ##' 
 ##' @export
 load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
@@ -129,7 +135,8 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @rdname BoostClassifier
 ##' @title Classifier for doublets in single-cell RNA-seq data
 ##' 
-##' @import Matrix stats Rphenograph igraph
+##' @import Matrix Rphenograph igraph methods
+##' @importFrom stats phyper
 ##' 
 ##' @export
 ##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
@@ -152,7 +159,6 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 
 ##' @usage
 ##' 
-##' library("DoubletDetection")
 ##' clf <- BoostClassifier$new()
 ##' # raw_counts is a cells by genes count matrix
 ##' labels <- clf$fit(raw_counts)$predict()

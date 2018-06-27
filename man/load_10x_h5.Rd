@@ -10,6 +10,8 @@ load_10x_h5(file, genome = NULL, barcode_filtered = TRUE)
 \item{file}{character: path to H5 file}
 
 \item{genome}{character: path to top level H5 group}
+
+\item{barcode_filtered}{logical: whether to use the filtered (TRUE) or raw (FALSE) gene-barcode matrix. Defaults to using filtered gene-barcode matrices.}
 }
 \description{
 Functions required to compute identification of doublets in single-cell RNA-Seq experiments.
