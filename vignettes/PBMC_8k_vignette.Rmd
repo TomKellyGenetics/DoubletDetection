@@ -68,7 +68,7 @@ These commands will be called from R in Linux and Mac systems. The files will ne
 if(!(file.exists("pbmc8k_filtered_gene_bc_matrices.tar.gz"))){
   system("wget http://cf.10xgenomics.com/samples/cell-exp/2.1.0/pbmc8k/pbmc8k_filtered_gene_bc_matrices.tar.gz")
   #extract compressed files 
-  #system("tar -xvzf pbmc8k_filtered_gene_bc_matrices.tar.gz")
+  system("tar -xvzf pbmc8k_filtered_gene_bc_matrices.tar.gz")
 }
 ```
 
