@@ -44,10 +44,6 @@ artifacts:
   - path: '\*_*.zip'
     name: Bits
 
-addons:
-  apt:
-    update: true
-
 use_bioc: true
 
 r_packages:
