@@ -5,18 +5,22 @@ Version: 2.3.0
 Author: Adam J. Gayoso, Jonathan D. Shor, Ambrose J. Carr, and S. Thomas Kelly
 Maintainer: S. Thomas Kelly <tom.kelly@riken.jp>
 Description: A method to detect and enable removal of doublets from single-cell RNA-sequencing data
-License: MIT
+License: MIT + file LICENSE.txt
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
 biocViews:
 Depends:
-    heatmap.2x,
     Rcpp,
+    utils,
+    graphics,
+    grDevices,
+    stats
+Imports:
+    heatmap.2x,
     hdf5r,
     igraph,
     Matrix,
-    stats,
     Rphenograph,
     gplots,
     Rtsne,
