@@ -45,12 +45,12 @@ artifacts:
     name: Bits
 
 # enable remotes
-r_github_packages:
-- TomKellyGenetics/Rphenograph
-- TomKellyGenetics/heatmap.2x
-
-r_build_args: --no-build-vignettes --no-manual --no-resave-data
-r_check_args: --no-build-vignettes --no-manual
-
-warnings_are_errors: false
+environment:
+  USE_RTOOLS: true
+  
+  R_BUILD_ARGS: --no-build-vignettes --no-manual --no-resave-data
+  
+  R_CHECK_ARGS: --no-build-vignettes --no-manual
+  
+  WARNINGS_ARE_ERRORS:
 
