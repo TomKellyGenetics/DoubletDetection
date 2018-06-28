@@ -135,7 +135,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @rdname BoostClassifier
 ##' @title Classifier for doublets in single-cell RNA-seq data
 ##' 
-##' @import Matrix Rphenograph igraph methods
+##' @import Matrix Rphenograph igraph
 ##' @importFrom stats phyper
 ##' 
 ##' @export
