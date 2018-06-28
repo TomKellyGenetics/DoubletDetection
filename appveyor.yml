@@ -44,9 +44,6 @@ artifacts:
   - path: '\*_*.zip'
     name: Bits
 
-r_packages:
-  - hdf5r
-
 # enable remotes
 r_github_packages:
 - TomKellyGenetics/Rphenograph
