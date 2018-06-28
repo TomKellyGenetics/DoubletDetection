@@ -11,12 +11,16 @@ LazyData: true
 RoxygenNote: 6.0.1
 biocViews:
 Depends:
-    heatmap.2x,
     Rcpp,
+    utils,
+    graphics,
+    grDevices,
+    stats
+Imports:
+    heatmap.2x,
     hdf5r,
     igraph,
     Matrix,
-    stats,
     Rphenograph,
     gplots,
     Rtsne,
