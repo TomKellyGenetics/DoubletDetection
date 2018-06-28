@@ -44,8 +44,6 @@ artifacts:
   - path: '\*_*.zip'
     name: Bits
 
-use_bioc: true
-
 r_packages:
   - hdf5r
 
