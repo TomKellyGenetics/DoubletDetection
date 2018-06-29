@@ -310,6 +310,7 @@ BoostClassifier <- setRefClass(
         stop("no valid new_lib_as input
               please enter NULL, TRUE, FALSE, or a valid function")
       }
+      new_lib_as <<- new_lib_as
 
       #check prune argument defined (to pass to phenograph)
       if(!("prune" %in% names(phenograph_parameters))){
