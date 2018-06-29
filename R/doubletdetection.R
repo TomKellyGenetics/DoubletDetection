@@ -142,9 +142,9 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
 ##' @field n_components (integer optional): Number of principal components used for clustering.
 ##' @field n_top_var_genes (integer optional): Number of highest variance genes to use; other genes discarded. Will use all genes when zero.
-##' @field new_lib_as: (([integer integer]) -> integer optional): Method to use in choosing library size for synthetic doublets. Defaults to NULL which makes synthetic doublets the exact addition of its parents; alternative is new_lib_as = max.
+##' @field new_lib_as: (function(integer vector) -> integer optional): Method to use in choosing library size for synthetic doublets. Defaults to NULL which makes synthetic doublets the exact addition of its parents; alternative is new_lib_as = max.
 ##' @field replace (logical, optional): If FALSE, a cell will be selected as a synthetic doublet's parent no more than once.
-##' @field phenograph_parameters (list, optional): Parameter dict to pass directly to Phenograph. Note that we change the Phenograph 'prune' default to TRUE; you must specifically include 'prune': FALSE here to change this.
+##' @field phenograph_parameters (list, optional): Parameter list to pass directly to Phenograph. Note that we change the Phenograph 'prune' default to TRUE; you must specifically include list(prune=FALSE) here to change this.
 ##' @field n_iters (integer optional): Number of fit operations from which to collect p-values. Defualt value is 25. normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
 ##' @field normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)
 ##' @field num_genes,num_cells (numeric): number of genes and cells, rows and columns of raw_counts matrix respectively.
@@ -174,6 +174,7 @@ BoostClassifier <- setRefClass(
     n_components = "numeric",
     n_top_var_genes = "numeric",
     new_lib_as = "ANY",
+    new_lib_as_fun = "ANY",
     replace = "logical",
     phenograph_parameters = "list",
     n_iters = "numeric",
@@ -199,6 +200,7 @@ BoostClassifier <- setRefClass(
                           n_components = 30L,
                           n_top_var_genes = 10000L,
                           new_lib_as = NULL,
+                          new_lib_as_fun = NULL,
                           replace = FALSE, 
                           phenograph_parameters = list(prune = TRUE),
                           n_iters = 25L,
@@ -296,13 +298,13 @@ BoostClassifier <- setRefClass(
       
       #check new_lib_as function
       if(is.function(new_lib_as)){
-        new_lib_as <<- new_lib_as
+        new_lib_as_fun <<- new_lib_as
         print(paste("function", deparse(substitute(new_lib_as)), "accepted as new_lib_as"))
       } else if(is.null(new_lib_as) || new_lib_as == TRUE){
-        new_lib_as <<- sum
+        new_lib_as_fun <<- sum
         print(paste("function", 'sum', "accepted as new_lib_as"))
       } else if(new_lib_as == FALSE){
-        new_lib_as <<- max
+        new_lib_as_fun <<- max
         print(paste("function", "max", "accepted as new_lib_as"))
       } else {
         stop("no valid new_lib_as input
@@ -529,7 +531,7 @@ BoostClassifier <- setRefClass(
     lib1 <- sum(cell1)
     lib2 <- sum(cell2)
     
-    new_lib_size <- as.integer(new_lib_as(c(lib1, lib2)))
+    new_lib_size <- as.integer(new_lib_as_fun(c(lib1, lib2)))
     
     mol_ind <- sample(as.integer(lib1 + lib2), size = new_lib_size)
     #mol_ind <- mol_ind #+1 #(vectorised) #not needed for 1-index language

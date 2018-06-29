@@ -29,11 +29,11 @@ labels <- clf$fit(raw_counts)$predict()
 
 \item{\code{n_top_var_genes}}{(integer optional): Number of highest variance genes to use; other genes discarded. Will use all genes when zero.}
 
-\item{\code{new_lib_as:}}{(([integer integer]) -> integer optional): Method to use in choosing library size for synthetic doublets. Defaults to NULL which makes synthetic doublets the exact addition of its parents; alternative is new_lib_as = max.}
+\item{\code{new_lib_as:}}{(function(integer vector) -> integer optional): Method to use in choosing library size for synthetic doublets. Defaults to NULL which makes synthetic doublets the exact addition of its parents; alternative is new_lib_as = max.}
 
 \item{\code{replace}}{(logical, optional): If FALSE, a cell will be selected as a synthetic doublet's parent no more than once.}
 
-\item{\code{phenograph_parameters}}{(list, optional): Parameter dict to pass directly to Phenograph. Note that we change the Phenograph 'prune' default to TRUE; you must specifically include 'prune': FALSE here to change this.}
+\item{\code{phenograph_parameters}}{(list, optional): Parameter list to pass directly to Phenograph. Note that we change the Phenograph 'prune' default to TRUE; you must specifically include list(prune=FALSE) here to change this.}
 
 \item{\code{n_iters}}{(integer optional): Number of fit operations from which to collect p-values. Defualt value is 25. normalizer ((matrix) -> matrix): Method to normalize raw_counts. Defaults to normalize_counts, included in this package. Note: To use normalize_counts with its pseudocount parameter changed from the default 0.1 value to some positive numeric `new_var`, use: normalizer=lambda counts: doubletdetection.normalize_counts(counts, pseudocount=new_var)}
 
@@ -52,9 +52,9 @@ labels <- clf$fit(raw_counts)$predict()
 \item{\code{fit(raw_counts)}}{Fits the classifier on raw_counts.}
 
 \item{\code{initialize(boost_rate = 0.25, n_components = 30L,
-  n_top_var_genes = 10000L, new_lib_as = NULL, replace = FALSE,
-  phenograph_parameters = list(prune = TRUE), n_iters = 25L,
-  normalizer = normalize_counts)}}{This method is called when you create an instance of the class.}
+  n_top_var_genes = 10000L, new_lib_as = NULL, new_lib_as_fun = NULL,
+  replace = FALSE, phenograph_parameters = list(prune = TRUE),
+  n_iters = 25L, normalizer = normalize_counts)}}{This method is called when you create an instance of the class.}
 
 \item{\code{predict(p_thresh = 0.01, voter_thresh = 0.9)}}{Produce doublet calls from fitted classifier.}
 }}
