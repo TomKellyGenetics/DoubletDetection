@@ -15,7 +15,8 @@ Depends:
     utils,
     graphics,
     grDevices,
-    stats
+    stats,
+    methods
 Imports:
     heatmap.2x,
     hdf5r,
