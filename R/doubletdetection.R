@@ -474,7 +474,7 @@ BoostClassifier <- setRefClass(
       
       print("Running PCA...")
       # Get phenograph results
-      pca <- prcomp(t(aug_counts), rank = n_components, center = TRUE, scale. = TRUE)$x
+      pca <- prcomp(t(aug_counts), rank = n_components, center = TRUE, scale. = FALSE)$x
       #pca <- normalizer(t(pca))
       reduced_counts <- pca[, 1:min(n_components, ncol(pca))]
       
