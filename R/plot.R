@@ -175,15 +175,15 @@ tsne_plot <- function(raw_counts, labels, n_components=30L, n_jobs=-1, show=FALS
 ##' 
 ##' @export
 
-threshold <- function(clf, log10=True, show=FALSE, save=NULL, p_grid=NULL, voter_grid=NULL, v_step=20,
+threshold <- function(clf, log10=TRUE, show=FALSE, save=NULL, p_grid=NULL, voter_grid=NULL, v_step=20,
               p_step=20){
           # Produce a plot showing number of cells called doublet across
           # various thresholds
           # Args:
           # clf (BoostClassifier object): Fitted classifier
-          # log10 (bool, optional): Use natural log p values if False, log10
+          # log10 (bool, optional): Use natural log p values if FALSE, log10
           # otherwise.
-          # show (bool, optional): If True, runs plt.show()
+          # show (bool, optional): If TRUE, runs plt.show()
           # save (str, optional): If provided, the figure is saved to this
           # filepath.
           # p_grid (ndarray, optional): p-value thresholds to use
@@ -196,13 +196,13 @@ threshold <- function(clf, log10=True, show=FALSE, save=NULL, p_grid=NULL, voter
           
   all_p_values <- clf$all_log_p_values_
   if(log10){
-    log_function <- log10
+    log_function <- function(x) log10(x)
     all_p_values <- all_p_values / log(10)
-  } else{
+  } else {
     log_function <- log
   }
   if(is.null(p_grid)){
-    p_grid <- unique(sort(all_p_values_))
+    p_grid <- unique(sort(all_p_values))
     p_grid <- p_grid[p_grid < log_function(0.01)]
   }
   if(is.null(voter_grid)){
@@ -212,9 +212,9 @@ threshold <- function(clf, log10=True, show=FALSE, save=NULL, p_grid=NULL, voter
   doubs_per_t <- matrix(0, length(voter_grid), length(p_grid))
   for(i in 1:length(voter_grid)){
     for(j in 1:length(p_grid)){
-      voting_average <- apply(all_p_values_ <= p_grid[j], 1, mean, na.rm=T)
-      labels = as.integer(voting_average >= voter_grid[i])
-      doubs_per_t[i, j] = sum(labels, na.rm =T)
+      voting_average <- apply(all_p_values <= p_grid[j], 1, mean, na.rm=T)
+      labels <- as.integer(voting_average >= voter_grid[i])
+      doubs_per_t[i, j] <- sum(labels, na.rm =T)
     }
   }
   heatmap.2x(doubs_per_t, scale = 'none', trace = 'none', 
