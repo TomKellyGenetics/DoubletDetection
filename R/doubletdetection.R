@@ -498,15 +498,16 @@ BoostClassifier <- setRefClass(
       names(synth_cells_per_comm)<- community_IDs 
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
       scores <- community_scores[communities]
-      #community_p_values <- sapply(1:length(community_IDs), function(i){
-      #  phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE)
-      #})  #DEPRECATED
-      community_log_p_values <- sapply(1:length(community_IDs), function(i){
-        phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE, log.p = TRUE)
+      community_p_values <- sapply(1:length(community_IDs), function(i){
+        phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE)
       })
-      community_p_values <- exp(community_log_p_values)  #DEPRECATED
+      #community_log_p_values <- sapply(1:length(community_IDs), function(i){
+      #  phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE, log.p = TRUE)
+      #})
+      #community_p_values <- exp(community_log_p_values)  #DEPRECATED
       p_values <- community_p_values[communities] #DEPRECATED
-      log_p_values <- community_log_p_values[communities]
+      #log_p_values <- community_log_p_values[communities]
+      log_p_values <- log(community_p_values)[communities]
     
       if(min_ID < 0){
         scores[communities == -1] <- NA
@@ -593,9 +594,9 @@ predict = function(clf, p_thresh = 0.01, voter_thresh = 0.9){
   # 
   #         Returns:
   #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
-  log_p_thresh <- log(p_thresh)
-  if(n_iters > 1){
-    voting_average_ <- apply(clf$all_log_p_values_, 2, function(x){
+  #log_p_thresh <- log(p_thresh)
+  if(clf$n_iters > 1){
+    voting_average_ <- apply(clf$all_p_values_, 2, function(x){
       x <- ifelse(is.infinite(x), NA, x)
       mean(as.numeric(x <= log_p_thresh), na.rm = TRUE)
     })
