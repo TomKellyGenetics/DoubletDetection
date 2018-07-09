@@ -430,7 +430,7 @@ BoostClassifier <- setRefClass(
       #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
       log_p_thresh <- log(p_thresh)
       if(n_iters > 1){
-        voting_average_ <- apply(all_log_p_values_, 2, function(x){
+          voting_average_ <- apply(all_log_p_values_, 2, function(x){
           x <- ifelse(is.infinite(x), NA, x)
           mean(as.numeric(x <= log_p_thresh), na.rm = TRUE)
         })
@@ -498,15 +498,16 @@ BoostClassifier <- setRefClass(
       names(synth_cells_per_comm)<- community_IDs 
       community_scores  <- as.numeric(synth_cells_per_comm) / (synth_cells_per_comm + orig_cells_per_comm)
       scores <- community_scores[communities]
-      #community_p_values <- sapply(1:length(community_IDs), function(i){
-      #  phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE)
-      #})  #DEPRECATED
-      community_log_p_values <- sapply(1:length(community_IDs), function(i){
-        phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE, log.p = TRUE)
+      community_p_values <- sapply(1:length(community_IDs), function(i){
+        phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE)
       })
-      community_p_values <- exp(community_log_p_values)  #DEPRECATED
+      #community_log_p_values <- sapply(1:length(community_IDs), function(i){
+      #  phyper(synth_cells_per_comm[i], ncol(synthetics), ncol(raw_counts), synth_cells_per_comm[i] + orig_cells_per_comm[i], lower.tail = FALSE, log.p = TRUE)
+      #})
+      #community_p_values <- exp(community_log_p_values)  #DEPRECATED
       p_values <- community_p_values[communities] #DEPRECATED
-      log_p_values <- community_log_p_values[communities]
+      #log_p_values <- community_log_p_values[communities]
+      log_p_values <- log(community_p_values)[communities]
     
       if(min_ID < 0){
         scores[communities == -1] <- NA
@@ -577,3 +578,42 @@ BoostClassifier <- setRefClass(
   }
   )
 )
+
+
+predict = function(clf, p_thresh = 0.01, voter_thresh = 0.9){ 
+  "Produce doublet calls from fitted classifier."
+  #         Args:
+  #             p_thresh (numeric, optional): hypergeometric test p-value threshold
+  #                 that determines per iteration doublet calls
+  #             voter_thresh (numeric, optional): fraction of iterations a cell must
+  #                 be called a doublet
+  # 
+  #         Sets:
+  #             labels_ and voting_average_ if n_iters > 1.
+  #             labels_ and suggested_score_cutoff_ if n_iters == 1.
+  # 
+  #         Returns:
+  #             labels_ (ndarray, ndims=1):  0 for singlet, 1 for detected doublet
+  #log_p_thresh <- log(p_thresh)
+  if(clf$n_iters > 1){
+    voting_average_ <- apply(clf$all_p_values_, 2, function(x){
+      x <- ifelse(is.infinite(x), NA, x)
+      mean(as.numeric(x <= log_p_thresh), na.rm = TRUE)
+    })
+    labels_ <- ifelse(voting_average_ >= voter_thresh, 1, 0)
+    voting_average_ <- ifelse(is.numeric(voting_average_), voting_average_, NA)
+  } else{
+    # Find a cutoff score
+    potential_cutoffs <- unique(sort(clf$all_scores_[is.na(clf$all_scores_) == FALSE], decreasing = TRUE))
+    if(length(potential_cutoffs) > 1){
+      dropoff <- potential_cutoffs[2:length(potential_cutoffs)] - potential_cutoffs[1:(length(potential_cutoffs)-1)]
+      max_dropoff <- which(dropoff == max(dropoff)) #+ 1 (not needed for 1-indexed language)
+    } else {
+      # Most likely pathological dataset, only one (or no) clusters
+      max_dropoff <- 1
+    }
+    suggested_score_cutoff_ <- potential_cutoffs[max_dropoff]
+    labels_ <- ifelse(clf$all_scores_ >= suggested_score_cutoff_, 1, 0) #Allow NA values
+  }
+  return(labels_)
+}

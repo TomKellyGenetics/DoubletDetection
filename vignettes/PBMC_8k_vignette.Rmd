@@ -3,6 +3,7 @@ title: "Doublet Detection on 8k PBMCs from 10X Genomics"
 author: "Tom Kelly and Jonathon Shor"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+keep_md: yes
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -86,7 +87,7 @@ raw_counts <- raw_counts[non_zero_genes, ]
 
 Right now, phenograph is a bit talkative, so we suppress the output to avoid lots of text:
 
-```{r, include = FALSE}
+```{r, echo = TRUE, results='hide'}
 #initialise BoostClassifier Reference Class (with analysis parameters)
 clf <- DoubletDetection::BoostClassifier$new(n_iters=50)
  
