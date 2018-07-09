@@ -12,7 +12,7 @@ convergence(clf, show = FALSE, save = NULL, p_thresh = 0.01,
 tsne_plot(raw_counts, labels, n_components = 30L, n_jobs = -1,
   show = FALSE, save = NULL)
 
-threshold(clf, log10 = True, show = FALSE, save = NULL, p_grid = NULL,
+threshold(clf, log10 = TRUE, show = FALSE, save = NULL, p_grid = NULL,
   voter_grid = NULL, v_step = 20, p_step = 20)
 }
 \arguments{

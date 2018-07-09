@@ -81,6 +81,7 @@ load_mtx <- function(file){
 ##' 
 ##' @import hdf5r
 ##' @importFrom Matrix readMM
+##' @importFrom methods new
 ##' @importClassesFrom Matrix dgCMatrix CsparseMatrix
 ##' 
 ##' @export
@@ -136,7 +137,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @title Classifier for doublets in single-cell RNA-seq data
 ##' 
 ##' @import Matrix Rphenograph igraph
-##' @importFrom stats phyper
+##' @importFrom stats phyper prcomp
 ##' 
 ##' @export
 ##' @field boost_rate (numeric, optional): Proportion of cell population size to produce as synthetic doublets.
