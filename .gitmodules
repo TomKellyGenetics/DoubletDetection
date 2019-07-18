@@ -1,0 +1,6 @@
+[submodule "DoubletDetection"]
+	path = DoubletDetection
+	url = https://github.com/JonathanShor/DoubletDetection.git
+[submodule "src/DoubletDetection"]
+	path = src/DoubletDetection
+	url = https://github.com/JonathanShor/DoubletDetection.git
