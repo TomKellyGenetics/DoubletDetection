@@ -1,7 +1,7 @@
 Package: DoubletDetection
 Type: Package
 Title: DoubletDetection is a package to detect doublets (technical errors) in single-cell RNA-seq count matrices.
-Version: 2.3.0
+Version: 2.3.0.9001
 Author: Adam J. Gayoso, Jonathan D. Shor, Ambrose J. Carr, and S. Thomas Kelly
 Maintainer: S. Thomas Kelly <tom.kelly@riken.jp>
 Description: A method to detect and enable removal of doublets from single-cell RNA-sequencing data
@@ -11,13 +11,14 @@ LazyData: true
 RoxygenNote: 6.0.1
 biocViews:
 Depends:
-    Rcpp,
     utils,
     graphics,
     grDevices,
     stats,
     methods
 Imports:
+    reticulate,
+    Rcpp,
     heatmap.2x,
     hdf5r,
     igraph,
@@ -25,7 +26,9 @@ Imports:
     Rphenograph,
     gplots,
     Rtsne,
+LinkingTo: Rcpp
 Suggests:
+    Seurat,
     knitr,
     rmarkdown,
     testthat

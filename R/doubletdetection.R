@@ -136,7 +136,8 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @rdname BoostClassifier
 ##' @title Classifier for doublets in single-cell RNA-seq data
 ##' 
-##' @import Matrix Rphenograph igraph
+##' @import Matrix igraph
+##' @importFrom Rphenograph Rphenograph find_neighbors
 ##' @importFrom stats phyper prcomp
 ##' 
 ##' @export
@@ -157,7 +158,7 @@ load_10x_h5 <- function(file, genome = NULL, barcode_filtered = TRUE){
 ##' @param p_thresh (numeric, optional): hypergeometric test p-value threshold that determines per iteration doublet calls
 ##' @param voter_thresh (numeric, optional): fraction of iterations a cell must be called a doublet
 ##' @param cell1,cell2 (vector, numeric): Gene count vectors.
-
+##' 
 ##' @usage
 ##' 
 ##' clf <- BoostClassifier$new()
@@ -335,6 +336,9 @@ BoostClassifier <- setRefClass(
       print("Reference Class BoostClassifier has been initialized")
     },
     fit = function(raw_counts){
+      #raw_counts <- r_to_py(as.matrix(raw_counts))
+      #doubletdetection$doubletdetection$BoostClassifier$fit(.self, raw_counts = raw_counts)
+      #function(raw_counts){
       "Fits the classifier on raw_counts."
       #         Args:
       #             raw_counts (array-like): Count matrix, oriented cells by genes.
@@ -362,7 +366,7 @@ BoostClassifier <- setRefClass(
           warning("raw_counts contains Non-finite values")
         }
       }
-      
+
       if(n_top_var_genes > 0){
         gene_variances <- apply(raw_counts, 1, var)
         top_var_indexes <- order(gene_variances)
@@ -381,15 +385,15 @@ BoostClassifier <- setRefClass(
       raw_counts <<- raw_counts
       num_genes <<- nrow(raw_counts)
       num_cells <<- ncol(raw_counts)
-      
+
       all_scores_ <<- matrix(0, n_iters, num_cells)
       all_p_values_ <<- matrix(0, n_iters, num_cells)
       all_log_p_values_ <<- matrix(0, n_iters, num_cells)
       all_communities <- matrix(0, n_iters, num_cells)
-      
+
       all_parents <- list()
       all_synth_communities <- matrix(0, n_iters, as.integer(boost_rate * num_cells))
-      
+
       for(i in 1:n_iters){
         print(paste0("Iteration ", i, "/", n_iters))
         fits <- one_fit()
@@ -406,13 +410,13 @@ BoostClassifier <- setRefClass(
       #attr(self, "norm_counts") <- NULL
       #attr(self, "rawsynthetics") <- NULL
       #attr(self, "synthetics") <- NULL
-      
+
       communities_ <<- all_communities
       parents_ <<- all_parents
       synth_communities_ <<- all_synth_communities
-      
-      self <- list(all_scores_, all_p_values_, all_log_p_values_, communities_, top_var_genes_, parents_, synth_communities_)
-      names(self) <- c("all_scores_", "all_p_values_", "all_log_p_values_", "communities_", "top_var_genes_", "parents_", "synth_communities_")
+
+      .self <- list(all_scores_, all_p_values_, all_log_p_values_, communities_, top_var_genes_, parents_, synth_communities_)
+      names(.self) <- c("all_scores_", "all_p_values_", "all_log_p_values_", "communities_", "top_var_genes_", "parents_", "synth_communities_")
       return(.self)
     },
     predict = function(p_thresh = 0.01, voter_thresh = 0.9){ 
@@ -617,4 +621,47 @@ predict = function(clf, p_thresh = 0.01, voter_thresh = 0.9){
     labels_ <- ifelse(clf$all_scores_ >= suggested_score_cutoff_, 1, 0) #Allow NA values
   }
   return(labels_)
+}
+
+# global reference to python modules (will be initialized in .onLoad)
+np <- NULL
+sp <- NULL
+doubletdetection <- NULL
+
+# import numpy as np
+# import phenograph
+# from sklearn.decomposition import PCA
+# from sklearn.utils import check_array
+# from scipy.io import mmread
+# from scipy.stats import hypergeom
+# import scipy.sparse as sp_sparse
+# import tables
+
+.onLoad = function(libname, pkgname) {
+  if(reticulate::py_available()){
+    use_condaenv("r-reticulate")
+    install_python_modules <- function(method = "auto", conda = "auto") {
+      reticulate::py_install(c("numpy", "scipy", "pathlib"), method = method, conda = conda)
+      reticulate::py_install("sklearn", method = method, conda = conda, pip = TRUE)
+      reticulate::py_install("tables", method = method, conda = conda, pip = TRUE)
+      reticulate::py_install(c("python-igraph", "louvain"), method = method, conda = conda, forge = TRUE)
+      reticulate::py_install("pathlib", method = method, conda = conda, pip = FALSE, forge = TRUE)
+      reticulate::py_install("scanpy", method = method, conda = conda)
+      #reticulate::py_install("doubletdetection", method = method, conda = conda)
+      system("conda activate r-reticulate; pip install ./src/DoubletDetection")
+    }
+  }
+  if (suppressWarnings(suppressMessages(requireNamespace("reticulate")))) {
+    modules <- reticulate::py_module_available("doubletdetection") && reticulate::py_module_available("scipy")
+    if (modules) {
+      ## assignment in parent environment!
+      #np <<- reticulate::import("numpy", delay_load = TRUE)
+      #sp <<- reticulate::import("scipy", delay_load = TRUE)
+      #sk <<- reticulate::import("sklearn.utils", delay_load = TRUE)
+      #system("git submodule add -f https://github.com/JonathanShor/DoubletDetection.git")
+      #system("git pull https://github.com/JonathanShor/DoubletDetection.git")
+      doubletdetection <<- reticulate::import_from_path("doubletdetection", path = "./src/DoubletDetection", convert = TRUE)
+      #doubletdetection <<- reticulate::import("doubletdetection", delay_load = TRUE)
+    }
+  }
 }
