@@ -1,7 +1,8 @@
-*.pyc
+^*.pyc
 
 .ipynb_checkpoints/
 .Rproj.user
 *.Rproj
 .Rbuildignore
-src
+src/*R
+src/*jl
